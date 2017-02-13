@@ -15,10 +15,15 @@ public class SwipeItemLayout extends FrameLayout {
     private final ViewDragHelper dragHelper;
     private boolean isOpen;
     private int currentState;
+    private boolean swipeEnable = true;
 
     public SwipeItemLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        dragHelper = ViewDragHelper.create(this, rightCallback);
+        dragHelper = ViewDragHelper.create(this, callback);
+    }
+
+    public void setSwipeEnable(boolean swipeEnable) {
+        this.swipeEnable = swipeEnable;
     }
 
     @Override
@@ -30,8 +35,10 @@ public class SwipeItemLayout extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        dragHelper.processTouchEvent(event);
-        return true;
+        if (swipeEnable) {
+            dragHelper.processTouchEvent(event);
+        }
+        return swipeEnable || super.onTouchEvent(event);
     }
 
     @Override
@@ -39,7 +46,7 @@ public class SwipeItemLayout extends FrameLayout {
         return dragHelper.shouldInterceptTouchEvent(ev);
     }
 
-    private ViewDragHelper.Callback rightCallback = new ViewDragHelper.Callback() {
+    private ViewDragHelper.Callback callback = new ViewDragHelper.Callback() {
 
         // 触摸到View的时候就会回调这个方法。
         // return true表示抓取这个View。
@@ -110,6 +117,7 @@ public class SwipeItemLayout extends FrameLayout {
     }
 
     private Rect outRect = new Rect();
+
     public Rect getMenuRect() {
         menu.getHitRect(outRect);
         return outRect;
