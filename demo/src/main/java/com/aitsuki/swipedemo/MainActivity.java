@@ -5,12 +5,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
+import com.aitsuki.swipedemo.util.ToastUtil;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ToastUtil.init(getApplication());
         View sil1 = findViewById(R.id.sil1);
         View tv_cancel1 = findViewById(R.id.tv_cancel1);
         View tv_confirm1 = findViewById(R.id.tv_confirm1);
@@ -23,49 +26,49 @@ public class MainActivity extends AppCompatActivity {
         sil1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "1", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("1");
             }
         });
 
         tv_cancel1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "取消 1", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("取消 1");
             }
         });
 
         tv_confirm1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "确定 1", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("确定 1");
             }
         });
 
         sil2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "2", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("2");
             }
         });
 
         tv_confirm2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "确定 2", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("确定 2");
             }
         });
 
         sil3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "3", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("3");
             }
         });
 
         tv_cancel3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "取消 3", Toast.LENGTH_SHORT).show();
+                ToastUtil.show("取消 3");
             }
         });
     }

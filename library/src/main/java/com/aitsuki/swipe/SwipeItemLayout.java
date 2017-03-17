@@ -51,6 +51,7 @@ public class SwipeItemLayout extends FrameLayout {
      * 菜单View作为value保存。
      */
     private LinkedHashMap<Integer, View> mMenus = new LinkedHashMap<>();
+    private int mDownX1;
 
     public SwipeItemLayout(Context context) {
         this(context, null);
@@ -69,8 +70,19 @@ public class SwipeItemLayout extends FrameLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        // 关闭菜单过程中禁止接收down事件
-        return !(ev.getAction() == MotionEvent.ACTION_DOWN && isCloseAnimating()) && super.dispatchTouchEvent(ev);
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            // 关闭菜单过程中禁止接收down事件
+            if (isCloseAnimating()) {
+                return false;
+            }
+
+            // 菜单打开的时候，按下Content关闭菜单
+            if (mIsOpen && isTouchContent(((int) ev.getX()), ((int) ev.getY()))) {
+                close();
+                return false;
+            }
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     @Override
@@ -87,11 +99,12 @@ public class SwipeItemLayout extends FrameLayout {
                 mDownY = ev.getY();
                 mDragHelper.processTouchEvent(ev);
                 // 当ContentView没有设置点击事件的时候，点击事件可以透过contentView传递给Menu。
-                // 所以当点击在Content上的时候，消费掉这个事件。
+                // 所以当点击在Content上的时候，消费掉这个事件， 并且关闭菜单……
                 if (getContentView() != null && !getContentView().isClickable()
-                        && isTouchContent(((int) mDownX), ((int) mDownY)) ) {
+                        && isTouchContent(((int) mDownX), ((int) mDownY))) {
                     return true;
                 }
+
                 break;
             case MotionEvent.ACTION_MOVE:
                 checkCanDragged(ev);
@@ -146,20 +159,31 @@ public class SwipeItemLayout extends FrameLayout {
      * 判断是否可以拖拽View
      */
     private void checkCanDragged(MotionEvent ev) {
-        // 如果菜单是开启的，mIsDragged = true
-        if (mIsDragged || mIsOpen) {
-            mIsDragged = true;
+        if (mIsDragged) {
             return;
         }
 
         float dx = ev.getX() - mDownX;
         float dy = ev.getY() - mDownY;
-        if (!mIsOpen) {
+        boolean isRightDrag = dx > mTouchSlop && dx > Math.abs(dy);
+        boolean isLeftDrag = dx < -mTouchSlop && Math.abs(dx) > Math.abs(dy);
+
+        if (mIsOpen) {
+            // 开启状态下，点击在content上就捕获事件，点击在菜单上则判断touchSlop
+            int downX = (int) mDownX;
+            int downY = (int) mDownY;
+            if (isTouchContent(downX, downY)) {
+                mIsDragged = true;
+            } else if (isTouchMenu(downX, downY)) {
+                mIsDragged = (isLeftMenu() && isLeftDrag) || (isRightMenu() && isRightDrag);
+            }
+
+        } else {
             // 关闭状态，获取当前即将要开启的菜单。
-            if (dx > mTouchSlop && dx > Math.abs(dy)) {
+            if (isRightDrag) {
                 mCurrentMenu = mMenus.get(Gravity.LEFT);
                 mIsDragged = mCurrentMenu != null;
-            } else if (dx < -mTouchSlop && Math.abs(dx) > Math.abs(dy)) {
+            } else if (isLeftDrag) {
                 mCurrentMenu = mMenus.get(Gravity.RIGHT);
                 mIsDragged = mCurrentMenu != null;
             }
@@ -208,6 +232,16 @@ public class SwipeItemLayout extends FrameLayout {
 
     private boolean isRightMenu() {
         return mCurrentMenu != null && mCurrentMenu == mMenus.get(Gravity.RIGHT);
+    }
+
+    public boolean isTouchMenu(int x, int y) {
+        if (mCurrentMenu == null) {
+            return false;
+        }
+
+        Rect rect = new Rect();
+        mCurrentMenu.getHitRect(rect);
+        return rect.contains(x, y);
     }
 
     /**
