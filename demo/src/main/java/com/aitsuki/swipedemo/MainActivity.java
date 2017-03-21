@@ -21,6 +21,9 @@ public class MainActivity extends AppCompatActivity {
         View tv_confirm2 = findViewById(R.id.tv_confirm2);
         View sil3 = findViewById(R.id.sil3);
         View tv_cancel3 = findViewById(R.id.tv_cancel3);
+        View sil4 = findViewById(R.id.sil4);
+        View tv_cancel4 = findViewById(R.id.tv_cancel4);
+        View bt4 = findViewById(R.id.bt4);
 
 
         sil1.setOnClickListener(new View.OnClickListener() {
@@ -69,6 +72,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 ToastUtil.show("取消 3");
+            }
+        });
+
+        sil4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ToastUtil.show("4");
+            }
+        });
+
+        tv_cancel4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ToastUtil.show("好长啊 4");
+            }
+        });
+
+        bt4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ToastUtil.show("障碍物4");
             }
         });
     }

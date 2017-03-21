@@ -6,6 +6,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,6 +20,7 @@ import java.util.LinkedHashMap;
  * Created by AItsuki on 2017/2/23.
  * 1. 最多同时设置两个菜单
  * 2. 菜单必须设置layoutGravity属性. start left end right
+ * 3.
  */
 public class SwipeItemLayout extends FrameLayout {
 
@@ -51,7 +53,6 @@ public class SwipeItemLayout extends FrameLayout {
      * 菜单View作为value保存。
      */
     private LinkedHashMap<Integer, View> mMenus = new LinkedHashMap<>();
-    private int mDownX1;
 
     public SwipeItemLayout(Context context) {
         this(context, null);
@@ -66,6 +67,12 @@ public class SwipeItemLayout extends FrameLayout {
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mVelocity = ViewConfiguration.get(context).getScaledMinimumFlingVelocity();
         mDragHelper = ViewDragHelper.create(this, new DragCallBack());
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        updateMenu();
     }
 
     @Override
@@ -97,25 +104,21 @@ public class SwipeItemLayout extends FrameLayout {
                 mIsDragged = false;
                 mDownX = ev.getX();
                 mDownY = ev.getY();
-                mDragHelper.processTouchEvent(ev);
-                // 当ContentView没有设置点击事件的时候，点击事件可以透过contentView传递给Menu。
-                // 所以当点击在Content上的时候，消费掉这个事件， 并且关闭菜单……
-                if (getContentView() != null && !getContentView().isClickable()
-                        && isTouchContent(((int) mDownX), ((int) mDownY))) {
-                    return true;
-                }
-
                 break;
             case MotionEvent.ACTION_MOVE:
                 checkCanDragged(ev);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                mIsDragged = false;
-                mDragHelper.processTouchEvent(ev);
+                if (mIsDragged) {
+                    mDragHelper.processTouchEvent(ev);
+                    mIsDragged = false;
+                }
                 break;
             default:
-                mDragHelper.processTouchEvent(ev);
+                if (mIsDragged) {
+                    mDragHelper.processTouchEvent(ev);
+                }
                 break;
         }
         return mIsDragged || super.onInterceptTouchEvent(ev);
@@ -133,7 +136,6 @@ public class SwipeItemLayout extends FrameLayout {
                 mIsDragged = false;
                 mDownX = ev.getX();
                 mDownY = ev.getY();
-                mDragHelper.processTouchEvent(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
                 checkCanDragged(ev);
@@ -187,6 +189,12 @@ public class SwipeItemLayout extends FrameLayout {
                 mCurrentMenu = mMenus.get(Gravity.RIGHT);
                 mIsDragged = mCurrentMenu != null;
             }
+        }
+
+        if (mIsDragged) {
+            MotionEvent obtain = MotionEvent.obtain(ev);
+            obtain.setAction(MotionEvent.ACTION_DOWN);
+            mDragHelper.processTouchEvent(obtain);
         }
     }
 
@@ -303,11 +311,32 @@ public class SwipeItemLayout extends FrameLayout {
         return false;
     }
 
+    /**
+     * 当菜单被ContentView遮住的时候，要设置菜单为Invisible，防止已隐藏的菜单接收到点击事件。
+     */
+    private void updateMenu() {
+        View contentView = getContentView();
+        if (contentView != null) {
+            int contentLeft = contentView.getLeft();
+            if (contentLeft == 0) {
+                for (View view : mMenus.values()) {
+                    if (view.getVisibility() != INVISIBLE) {
+                        view.setVisibility(INVISIBLE);
+                    }
+                }
+            } else {
+                if (mCurrentMenu != null && mCurrentMenu.getVisibility() != VISIBLE) {
+                    mCurrentMenu.setVisibility(VISIBLE);
+                }
+            }
+        }
+    }
+
     @Override
     public void computeScroll() {
         super.computeScroll();
         if (mDragHelper.continueSettling(true)) {
-            invalidate();
+            ViewCompat.postInvalidateOnAnimation(this);
         }
     }
 
@@ -361,14 +390,21 @@ public class SwipeItemLayout extends FrameLayout {
         }
 
         @Override
+        public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
+            super.onViewPositionChanged(changedView, left, top, dx, dy);
+            updateMenu();
+        }
+
+        @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
+            Log.e(TAG, "onViewReleased: " + xvel + " ,releasedChild = " + releasedChild);
             if (isLeftMenu()) {
                 if (xvel > mVelocity) {
                     open();
                 } else if (xvel < -mVelocity) {
                     close();
                 } else {
-                    if (getContentView().getLeft() > mCurrentMenu.getWidth() / 2) {
+                    if (getContentView().getLeft() > mCurrentMenu.getWidth() / 3 * 2) {
                         open();
                     } else {
                         close();
@@ -380,7 +416,7 @@ public class SwipeItemLayout extends FrameLayout {
                 } else if (xvel > mVelocity) {
                     close();
                 } else {
-                    if (getContentView().getLeft() < -mCurrentMenu.getWidth() / 2) {
+                    if (getContentView().getLeft() < -mCurrentMenu.getWidth() / 3 * 2) {
                         open();
                     } else {
                         close();
