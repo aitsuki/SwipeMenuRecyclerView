@@ -6,123 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.aitsuki.swipedemo.MainActivity">
 
-    <com.aitsuki.swipe.SwipeItemLayout
-        android:id="@+id/sil1"
+    <com.aitsuki.swipe.SwipeMenuRecyclerView
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/tv_cancel1"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="left"
-            android:background="#f00"
-            android:text="取消"
-            android:textColor="#FFF"/>
-
-        <TextView
-            android:id="@+id/tv_confirm1"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:background="#00f"
-            android:text="确定"
-            android:textColor="#FFF"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?android:colorBackground"
-            android:gravity="center"
-            android:text="左右都可以"/>
-
-    </com.aitsuki.swipe.SwipeItemLayout>
-
-    <com.aitsuki.swipe.SwipeItemLayout
-        android:id="@+id/sil2"
-        android:layout_width="match_parent"
-        android:layout_height="50dp">
-
-        <TextView
-            android:id="@+id/tv_confirm2"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:background="#00f"
-            android:text="确定"
-            android:textColor="#FFF"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?android:colorBackground"
-            android:gravity="center"
-            android:text="只能左划"/>
-
-    </com.aitsuki.swipe.SwipeItemLayout>
-
-    <com.aitsuki.swipe.SwipeItemLayout
-        android:id="@+id/sil3"
-        android:layout_width="match_parent"
-        android:layout_height="50dp">
-
-        <TextView
-            android:id="@+id/tv_cancel3"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="left"
-            android:background="#f00"
-            android:text="取消"
-            android:textColor="#FFF"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?android:colorBackground"
-            android:gravity="center"
-            android:text="只能右划"/>
-
-    </com.aitsuki.swipe.SwipeItemLayout>
-
-    <com.aitsuki.swipe.SwipeItemLayout
-        android:id="@+id/sil4"
-        android:layout_width="match_parent"
-        android:layout_height="50dp">
-
-        <TextView
-            android:id="@+id/tv_cancel4"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="left"
-            android:background="#f00"
-            android:text="好长啊"
-            android:textColor="#FFF"/>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="?android:colorBackground"
-                android:gravity="center"
-                android:text="完全长度的菜单"/>
-
-            <Button
-                android:id="@+id/bt4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="障碍物"/>
-        </FrameLayout>
-
-
-    </com.aitsuki.swipe.SwipeItemLayout>
+    </com.aitsuki.swipe.SwipeMenuRecyclerView>
 
 </LinearLayout>

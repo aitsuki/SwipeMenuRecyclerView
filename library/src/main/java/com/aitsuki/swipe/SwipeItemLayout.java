@@ -195,6 +195,10 @@ public class SwipeItemLayout extends FrameLayout {
             MotionEvent obtain = MotionEvent.obtain(ev);
             obtain.setAction(MotionEvent.ACTION_DOWN);
             mDragHelper.processTouchEvent(obtain);
+            if (getParent() != null) {
+                // 开始拖动后，解决和父控件的滑动冲突。
+                getParent().requestDisallowInterceptTouchEvent(true);
+            }
         }
     }
 
@@ -281,6 +285,13 @@ public class SwipeItemLayout extends FrameLayout {
         }
         mIsOpen = true;
         invalidate();
+    }
+
+    /**
+     * 菜单是否开始拖动
+     */
+    public boolean isOpen() {
+        return mIsOpen;
     }
 
     /**
