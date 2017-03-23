@@ -1,6 +1,7 @@
 package com.aitsuki.swipedemo;
 
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,9 +12,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.aitsuki.swipe.SwipeItemLayout;
+import com.aitsuki.swipedemo.data.Repository;
+import com.aitsuki.swipedemo.entity.Data;
+import com.aitsuki.swipedemo.entity.Type;
 import com.aitsuki.swipedemo.util.ToastUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,17 +32,8 @@ public class MainActivity extends AppCompatActivity {
         DividerItemDecoration dividerItemDecoration =
                 new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(dividerItemDecoration);
-
-        DemoAdapter adapter =new DemoAdapter(fakeData(20, "测试RecyclerView"), mItemTouchListener);
+        DemoAdapter adapter =new DemoAdapter(new Repository().fakeDate(), mItemTouchListener);
         recyclerView.setAdapter(adapter);
-    }
-
-    private List<String> fakeData(int count, String content) {
-        List<String> data = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            data.add(content);
-        }
-        return data;
     }
 
     ItemTouchListener mItemTouchListener = new ItemTouchListener() {
@@ -59,26 +53,68 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private static class DemoAdapter extends RecyclerView.Adapter<SwipeItemHolder> {
+    interface ItemTouchListener {
+        void onItemClick(String str);
+
+        void onLeftMenuClick(String str);
+
+        void onRightMenuClick(String str);
+    }
+
+    private static class DemoAdapter extends RecyclerView.Adapter<SimpleViewHolder> {
 
         private ItemTouchListener mItemTouchListener;
-        private List<String> mData;
+        private List<Data> mData;
 
-        public DemoAdapter(List<String> data, ItemTouchListener itemTouchListener) {
+        DemoAdapter(List<Data> data, ItemTouchListener itemTouchListener) {
             this.mData = data;
             this.mItemTouchListener = itemTouchListener;
         }
 
         @Override
-        public SwipeItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View rootView = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.swipe_item, parent, false);
-            return new SwipeItemHolder(rootView);
+        public int getItemViewType(int position) {
+            return mData.get(position).type;
+        }
+
+
+        @Override
+        public int getItemCount() {
+            return mData.size();
         }
 
         @Override
-        public void onBindViewHolder(final SwipeItemHolder holder, int position) {
-            holder.mContent.setText(mData.get(position).concat(" " + position));
+        public SimpleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+            @LayoutRes
+            int layout = R.layout.item_left_menu;
+
+            switch (viewType) {
+                case Type.LEFT_MENU:
+                    layout = R.layout.item_left_menu;
+                    break;
+                case Type.RIGHT_MENU:
+                    layout = R.layout.item_right_menu;
+                    break;
+                case Type.LEFT_AND_RIGHT_MENU:
+                    layout = R.layout.item_left_and_right_menu;
+                    break;
+                case Type.LEFT_LONG_MENU:
+                    layout = R.layout.item_left_long_menu;
+                    break;
+                case Type.RIGHT_LONG_MENU:
+                    layout = R.layout.item_right_long_menu;
+                    break;
+                case Type.LEFT_AND_RIGHT_LONG_MENU:
+                    layout = R.layout.item_left_and_right_long_menu;
+                    break;
+            }
+            View rootView = LayoutInflater.from(parent.getContext()).inflate(layout, parent, false);
+            return new SimpleViewHolder(rootView);
+        }
+
+        @Override
+        public void onBindViewHolder(final SimpleViewHolder holder, int position) {
+            holder.mContent.setText(mData.get(position).content.concat(" " + position));
             if (mItemTouchListener != null) {
                 holder.itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -87,51 +123,43 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                holder.mLeftMenu.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mItemTouchListener.onLeftMenuClick("leftMenu" + holder.getAdapterPosition());
-                        holder.mSwipeItemLayout.close();
-                    }
-                });
+                if (holder.mLeftMenu != null) {
+                    holder.mLeftMenu.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mItemTouchListener.onLeftMenuClick("leftMenu" + holder.getAdapterPosition());
+                            holder.mSwipeItemLayout.close();
+                        }
+                    });
+                }
 
-                holder.mRightMenu.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mItemTouchListener.onRightMenuClick("rightMenu" + holder.getAdapterPosition());
-                        holder.mSwipeItemLayout.close();
-                    }
-                });
+                if (holder.mRightMenu != null) {
+                    holder.mRightMenu.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mItemTouchListener.onRightMenuClick("rightMenu" + holder.getAdapterPosition());
+                            holder.mSwipeItemLayout.close();
+                        }
+                    });
+                }
             }
         }
 
-        @Override
-        public int getItemCount() {
-            return mData.size();
-        }
     }
 
-    private static class SwipeItemHolder extends RecyclerView.ViewHolder {
+    private static class SimpleViewHolder extends RecyclerView.ViewHolder {
 
         private final View mLeftMenu;
         private final View mRightMenu;
         private final TextView mContent;
         private final SwipeItemLayout mSwipeItemLayout;
 
-        SwipeItemHolder(View itemView) {
+        SimpleViewHolder(View itemView) {
             super(itemView);
             mSwipeItemLayout = (SwipeItemLayout) itemView.findViewById(R.id.swipe_layout);
-            mContent = (TextView) itemView.findViewById(R.id.content);
+            mContent = (TextView) itemView.findViewById(R.id.tv_content);
             mLeftMenu = itemView.findViewById(R.id.left_menu);
             mRightMenu = itemView.findViewById(R.id.right_menu);
         }
-    }
-
-    private interface ItemTouchListener {
-        void onItemClick(String str);
-
-        void onLeftMenuClick(String str);
-
-        void onRightMenuClick(String str);
     }
 }

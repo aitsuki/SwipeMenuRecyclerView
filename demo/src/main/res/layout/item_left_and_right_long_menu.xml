@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.aitsuki.swipe.SwipeItemLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/swipe_layout"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/swipe_item_height">
+
+    <TextView
+        android:id="@+id/left_menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="left"
+        android:background="@color/red500"
+        android:gravity="center"
+        android:text="left"
+        android:textColor="@color/white"/>
+
+    <TextView
+        android:id="@+id/right_menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        android:background="@color/blue500"
+        android:gravity="center"
+        android:text="right"
+        android:textColor="@color/white"/>
+
+    <include layout="@layout/swipe_content"/>
+
+</com.aitsuki.swipe.SwipeItemLayout>
