@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.mLeftMenu.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            mItemTouchListener.onLeftMenuClick("leftMenu" + holder.getAdapterPosition());
+                            mItemTouchListener.onLeftMenuClick("left " + holder.getAdapterPosition());
                             holder.mSwipeItemLayout.close();
                         }
                     });
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                     holder.mRightMenu.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            mItemTouchListener.onRightMenuClick("rightMenu" + holder.getAdapterPosition());
+                            mItemTouchListener.onRightMenuClick("right " + holder.getAdapterPosition());
                             holder.mSwipeItemLayout.close();
                         }
                     });
