@@ -20,7 +20,6 @@ import java.util.LinkedHashMap;
  * Created by AItsuki on 2017/2/23.
  * 1. 最多同时设置两个菜单
  * 2. 菜单必须设置layoutGravity属性. start left end right
- * 3.
  */
 public class SwipeItemLayout extends FrameLayout {
 
