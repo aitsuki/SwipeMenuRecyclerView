@@ -138,17 +138,25 @@ public class SwipeItemLayout extends FrameLayout {
                 mDownY = ev.getY();
                 break;
             case MotionEvent.ACTION_MOVE:
+                boolean beforeCheckDrag = mIsDragged;
                 checkCanDragged(ev);
                 if (mIsDragged) {
                     mDragHelper.processTouchEvent(ev);
                 }
+
+                // 开始拖动后，发送一个cancel事件用来取消点击效果
+                if (!beforeCheckDrag && mIsDragged) {
+                    MotionEvent obtain = MotionEvent.obtain(ev);
+                    obtain.setAction(MotionEvent.ACTION_CANCEL);
+                    super.onTouchEvent(obtain);
+                }
+
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                // 拖拽后手指抬起，或者已经开启菜单，不应该响应到点击事件，所以要发送一个Cancel取消点击事件
-                // 并且关闭菜单
                 if (mIsDragged || mIsOpen) {
                     mDragHelper.processTouchEvent(ev);
+                    // 拖拽后手指抬起，或者已经开启菜单，不应该响应到点击事件
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     mIsDragged = false;
                 }
@@ -192,11 +200,12 @@ public class SwipeItemLayout extends FrameLayout {
         }
 
         if (mIsDragged) {
+            // 开始拖动后，分发down事件给DragHelper，并且发送一个cancel取消点击事件
             MotionEvent obtain = MotionEvent.obtain(ev);
             obtain.setAction(MotionEvent.ACTION_DOWN);
             mDragHelper.processTouchEvent(obtain);
             if (getParent() != null) {
-                // 开始拖动后，解决和父控件的滑动冲突。
+                // 解决和父控件的滑动冲突。
                 getParent().requestDisallowInterceptTouchEvent(true);
             }
         }

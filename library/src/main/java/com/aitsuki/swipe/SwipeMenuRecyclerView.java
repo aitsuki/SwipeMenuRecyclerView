@@ -32,7 +32,7 @@ public class SwipeMenuRecyclerView extends RecyclerView {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         int action = ev.getActionMasked();
-        // 手指按下的时候，如果有开启的菜单，只要手指不是落在该Item上，则关闭菜单, 并且不接受事件。
+        // 手指按下的时候，如果有开启的菜单，只要手指不是落在该Item上，则关闭菜单, 并且不分发事件。
         if (action == MotionEvent.ACTION_DOWN) {
             int x = (int) ev.getX();
             int y = (int) ev.getY();
