@@ -36,6 +36,9 @@ public class Repository {
                 case Type.LEFT_AND_RIGHT_LONG_MENU:
                     data.content = "LEFT_AND_RIGHT_LONG_MENU";
                     break;
+                default:
+                    data.content = "DEFAULT";
+                    break;
             }
             dataList.add(data);
         }

@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
                 new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(dividerItemDecoration);
 
-        DemoAdapter adapter =new DemoAdapter(new Repository().fakeDate(), mItemTouchListener);
+        DemoAdapter adapter = new DemoAdapter(new Repository().fakeDate(), mItemTouchListener);
         recyclerView.setAdapter(adapter);
     }
 
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         public SimpleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
             @LayoutRes
-            int layout = R.layout.item_left_menu;
+            int layout;
 
             switch (viewType) {
                 case Type.LEFT_MENU:
@@ -108,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case Type.LEFT_AND_RIGHT_LONG_MENU:
                     layout = R.layout.item_left_and_right_long_menu;
+                    break;
+                default:
+                    layout = R.layout.item_left_menu;
                     break;
             }
             View rootView = LayoutInflater.from(parent.getContext()).inflate(layout, parent, false);

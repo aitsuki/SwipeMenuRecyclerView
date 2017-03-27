@@ -1,5 +1,6 @@
 package com.aitsuki.swipe;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Rect;
 import android.support.v4.view.GravityCompat;
@@ -160,6 +161,11 @@ public class SwipeItemLayout extends FrameLayout {
                     mIsDragged = false;
                 }
                 break;
+            default:
+                if(mIsDragged) {
+                    mDragHelper.processTouchEvent(ev);
+                }
+                break;
         }
         return mIsDragged || super.onTouchEvent(ev);
     }
@@ -167,6 +173,7 @@ public class SwipeItemLayout extends FrameLayout {
     /**
      * 判断是否可以拖拽View
      */
+    @SuppressLint("RtlHardcoded")
     private void checkCanDragged(MotionEvent ev) {
         if (mIsDragged) {
             return;
@@ -211,6 +218,7 @@ public class SwipeItemLayout extends FrameLayout {
     }
 
     // 最后一个是内容，倒数第1第2个设置了layout_gravity = right or left的是菜单，其余的忽略
+    @SuppressLint("RtlHardcoded")
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
         super.addView(child, index, params);
@@ -222,6 +230,8 @@ public class SwipeItemLayout extends FrameLayout {
                 break;
             case Gravity.LEFT:
                 mMenus.put(Gravity.LEFT, child);
+                break;
+            default:
                 break;
         }
     }
@@ -246,10 +256,12 @@ public class SwipeItemLayout extends FrameLayout {
         return rect.contains(x, y);
     }
 
+    @SuppressLint("RtlHardcoded")
     private boolean isLeftMenu() {
         return mCurrentMenu != null && mCurrentMenu == mMenus.get(Gravity.LEFT);
     }
 
+    @SuppressLint("RtlHardcoded")
     private boolean isRightMenu() {
         return mCurrentMenu != null && mCurrentMenu == mMenus.get(Gravity.RIGHT);
     }
