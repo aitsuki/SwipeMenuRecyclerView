@@ -162,7 +162,7 @@ public class SwipeItemLayout extends FrameLayout {
                 }
                 break;
             default:
-                if(mIsDragged) {
+                if (mIsDragged) {
                     mDragHelper.processTouchEvent(ev);
                 }
                 break;
@@ -234,6 +234,10 @@ public class SwipeItemLayout extends FrameLayout {
             default:
                 break;
         }
+    }
+
+    public void setSwipeEnable(boolean enable) {
+        mSwipeEnable = enable;
     }
 
     /**
