@@ -350,18 +350,19 @@ public class SwipeItemLayout extends FrameLayout {
      * 当菜单被ContentView遮住的时候，要设置菜单为Invisible，防止已隐藏的菜单接收到点击事件。
      */
     private void updateMenu() {
+        // FIXME: 2017/4/1 在某些手机上，设置setVisibility会导致dragHelper失效，先用Clickable属性代替
         View contentView = getContentView();
         if (contentView != null) {
             int contentLeft = contentView.getLeft();
             if (contentLeft == 0) {
                 for (View view : mMenus.values()) {
-                    if (view.getVisibility() != INVISIBLE) {
-                        view.setVisibility(INVISIBLE);
+                    if (view.isClickable()) {
+                        view.setClickable(false);
                     }
                 }
             } else {
-                if (mCurrentMenu != null && mCurrentMenu.getVisibility() != VISIBLE) {
-                    mCurrentMenu.setVisibility(VISIBLE);
+                if (mCurrentMenu != null && !mCurrentMenu.isClickable()) {
+                    mCurrentMenu.setClickable(true);
                 }
             }
         }
