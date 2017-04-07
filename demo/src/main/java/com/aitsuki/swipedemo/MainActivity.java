@@ -121,30 +121,19 @@ public class MainActivity extends AppCompatActivity {
         public void onBindViewHolder(final SimpleViewHolder holder, int position) {
             holder.mContent.setText(mData.get(position).content.concat(" " + position));
             if (mItemTouchListener != null) {
-                holder.itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mItemTouchListener.onItemClick(holder.mContent.getText().toString());
-                    }
-                });
+                holder.itemView.setOnClickListener(v -> mItemTouchListener.onItemClick(holder.mContent.getText().toString()));
 
                 if (holder.mLeftMenu != null) {
-                    holder.mLeftMenu.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            mItemTouchListener.onLeftMenuClick("left " + holder.getAdapterPosition());
-                            holder.mSwipeItemLayout.close();
-                        }
+                    holder.mLeftMenu.setOnClickListener(v -> {
+                        mItemTouchListener.onLeftMenuClick("left " + holder.getAdapterPosition());
+                        holder.mSwipeItemLayout.close();
                     });
                 }
 
                 if (holder.mRightMenu != null) {
-                    holder.mRightMenu.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            mItemTouchListener.onRightMenuClick("right " + holder.getAdapterPosition());
-                            holder.mSwipeItemLayout.close();
-                        }
+                    holder.mRightMenu.setOnClickListener(v -> {
+                        mItemTouchListener.onRightMenuClick("right " + holder.getAdapterPosition());
+                        holder.mSwipeItemLayout.close();
                     });
                 }
             }

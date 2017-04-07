@@ -15,7 +15,9 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Created by AItsuki on 2017/2/23.
@@ -53,6 +55,8 @@ public class SwipeItemLayout extends FrameLayout {
      * 菜单View作为value保存。
      */
     private LinkedHashMap<Integer, View> mMenus = new LinkedHashMap<>();
+
+    private List<SwipeListener> mListeners;
 
     public SwipeItemLayout(Context context) {
         this(context, null);
@@ -290,6 +294,12 @@ public class SwipeItemLayout extends FrameLayout {
         }
         mDragHelper.smoothSlideViewTo(getContentView(), getPaddingLeft(), getPaddingTop());
         mIsOpen = false;
+        if (mListeners != null) {
+            int listenerCount = mListeners.size();
+            for (int i = listenerCount - 1; i >= 0; i--) {
+                mListeners.get(i).onSwipeClose(this);
+            }
+        }
         invalidate();
     }
 
@@ -308,6 +318,12 @@ public class SwipeItemLayout extends FrameLayout {
             mDragHelper.smoothSlideViewTo(getContentView(), -mCurrentMenu.getWidth(), getPaddingTop());
         }
         mIsOpen = true;
+        if (mListeners != null) {
+            int listenerCount = mListeners.size();
+            for (int i = listenerCount - 1; i >= 0; i--) {
+                mListeners.get(i).onSwipeOpen(this);
+            }
+        }
         invalidate();
     }
 
@@ -366,6 +382,37 @@ public class SwipeItemLayout extends FrameLayout {
                 }
             }
         }
+    }
+
+    /**
+     * 添加一个监听器用于监听SwipeItemLayout的开启和关闭
+     *
+     * @param listener SwipeListener
+     */
+    public void addSwipeListener(SwipeListener listener) {
+        if (listener == null) {
+            return;
+        }
+
+        if (mListeners == null) {
+            mListeners = new ArrayList<>();
+        }
+        mListeners.add(listener);
+    }
+
+    /**
+     * 移除监听器
+     */
+    public void removeSwipeListener(SwipeListener listener) {
+        if (listener == null) {
+            return;
+        }
+
+        if (mListeners == null) {
+            return;
+        }
+
+        mListeners.remove(listener);
     }
 
     @Override
@@ -461,5 +508,11 @@ public class SwipeItemLayout extends FrameLayout {
             }
         }
 
+    }
+
+    public interface SwipeListener {
+        void onSwipeOpen(SwipeItemLayout view);
+
+        void onSwipeClose(SwipeItemLayout view);
     }
 }
