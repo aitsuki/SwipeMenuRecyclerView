@@ -15,6 +15,6 @@ Add it in your root build.gradle at the end of repositories:
 <b>Step 2. Add the dependency</b>
 ```
 dependencies {
-	        compile 'com.github.AItsuki:SwipeMenuRecyclerView:v1.0.0'
+	        compile 'com.github.AItsuki:SwipeMenuRecyclerView:v1.0.1'
 	}
 ```
