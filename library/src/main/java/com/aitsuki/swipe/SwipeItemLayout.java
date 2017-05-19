@@ -171,7 +171,9 @@ public class SwipeItemLayout extends FrameLayout {
                 }
                 break;
         }
-        return mIsDragged || super.onTouchEvent(ev);
+        return mIsDragged || super.onTouchEvent(ev)
+                // 此判断是因为当没有点击事件时，事件会给RecylcerView响应导致无法划开菜单。
+                || (!isClickable() && mMenus.size() > 0);
     }
 
     /**
@@ -242,6 +244,10 @@ public class SwipeItemLayout extends FrameLayout {
 
     public void setSwipeEnable(boolean enable) {
         mSwipeEnable = enable;
+    }
+
+    public boolean isSwipeEnable() {
+        return mSwipeEnable;
     }
 
     /**
