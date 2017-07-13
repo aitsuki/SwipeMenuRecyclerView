@@ -290,6 +290,16 @@ public class SwipeItemLayout extends FrameLayout {
         return rect.contains(x, y);
     }
 
+    private boolean checkAbsoluteGravity(View menu, int checkFor) {
+        final int absGravity = getAbsoluteGravity(menu);
+        return (absGravity & checkFor) == checkFor;
+    }
+
+    private int getAbsoluteGravity(View menu) {
+        final int gravity = ((LayoutParams) menu.getLayoutParams()).gravity;
+        return GravityCompat.getAbsoluteGravity(gravity, ViewCompat.getLayoutDirection(this));
+    }
+
     /**
      * 关闭菜单
      */
@@ -377,11 +387,12 @@ public class SwipeItemLayout extends FrameLayout {
             int contentLeft = contentView.getLeft();
             if (contentLeft == 0) {
                 for (View view : mMenus.values()) {
-//                    if (view.getVisibility() != INVISIBLE) {
-//                        view.setVisibility(INVISIBLE);
-//                        invalidate();
-//                    }
-                    view.layout(-view.getWidth(), view.getTop(), 0, view.getBottom());
+                    if (checkAbsoluteGravity(view, Gravity.LEFT)) {
+                        view.layout(-view.getWidth(), view.getTop(), 0, view.getBottom());
+                    } else {
+                        view.layout(getMeasuredWidth(), view.getTop(),
+                                getMeasuredWidth() + view.getMeasuredWidth(), view.getBottom());
+                    }
                 }
             } else {
                 if (mCurrentMenu != null && mCurrentMenu.getLeft() != 0) {
