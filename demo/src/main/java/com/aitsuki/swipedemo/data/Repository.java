@@ -8,15 +8,15 @@ import java.util.List;
 
 /**
  * Created by AItsuki on 2017/3/23.
+ *
  */
-
 public class Repository {
 
     public List<Data> fakeDate() {
         List<Data> dataList = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
             Data data = new Data();
-            data.type = i % 6;
+            data.type = i % 7;
             switch (data.type) {
                 case Type.LEFT_MENU:
                     data.content = "LEFT_MENU";
@@ -35,6 +35,9 @@ public class Repository {
                     break;
                 case Type.LEFT_AND_RIGHT_LONG_MENU:
                     data.content = "LEFT_AND_RIGHT_LONG_MENU";
+                    break;
+                case Type.DISABLE_SWIPE_MENU:
+                    data.content = "DISABLE_SWIPE_MENU";
                     break;
                 default:
                     data.content = "DEFAULT";
