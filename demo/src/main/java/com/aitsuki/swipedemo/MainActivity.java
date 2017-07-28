@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
         ToastUtil.init(getApplication());
     }
 
+
     public void onNativeAdapterClick(View view) {
         Intent callingIntent = NativeRecyclerViewAdapterActivity.getCallingIntent(this);
         startActivity(callingIntent);

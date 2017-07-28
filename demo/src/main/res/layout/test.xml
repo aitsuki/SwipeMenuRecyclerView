@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <com.aitsuki.swipe.SwipeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        app:preview="noPreview">
+
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="left"
+            android:text="LEFT MENU"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:gravity="center"
+            android:background="#50f0"
+            />
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"
+            android:text="RIGHT MENU"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:gravity="center"
+            android:background="#500f"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Content"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Display1"
+            android:gravity="center"
+            android:background="#5f00"/>
+
+    </com.aitsuki.swipe.SwipeLayout>
+
+</LinearLayout>
