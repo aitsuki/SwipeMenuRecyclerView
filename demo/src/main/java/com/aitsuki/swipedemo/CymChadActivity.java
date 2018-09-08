@@ -84,13 +84,22 @@ public class CymChadActivity extends AppCompatActivity {
 
         @Override
         protected void convert(BaseViewHolder helper, Data data) {
-
             helper.setText(R.id.tv_content, data.content + " " + helper.getAdapterPosition());
             final SwipeItemLayout swipeLayout = (SwipeItemLayout) helper.itemView;
             swipeLayout.setSwipeEnable(helper.getItemViewType() != Type.DISABLE_SWIPE_MENU);
 
-            // 不使用helper设置点击事件是因为child点击的时候无法获取到ItemView……，无法关闭菜单
-            // 希望BaseRecyclerViewAdapterHelper这个库的作者以后会加上……
+            // 不使用helper设置点击事件是因为这个库是使用RecyclerView.addOnItemTouchListener模拟的点击事件
+            // 实际上点击事件不是发生在View上。
+            // 这引发了非常多的隐性问题，比如它无法响应到item的cancel事件。
+            // 而SwipeMenuLayout中滑动菜单和点击已打开的Content时都会发送一个cancel事件。
+
+            // 另外一个问题就是通过addOnItemTouchListener模拟的点击事件对于长按的处理不够完善。
+            // 例如你并不想设置长按事件，但是默认情况下它都会响应长按，并且强行给你一个震动效果。
+            // 而且如果你的itemView设置了selector背景，当你长按child时，itemView的背景也会变化。
+
+            // 综合来说，简单的Item使用addOnItemTouchListener模拟点击设置点击事件是非常便利的，这个库已经做得
+            // 非常好了。但是因为View的复杂性，不可能做的完美。这种情况下就需要禁用addOnItemTouchListener。使
+            // 用原生的方式设置点击事件。
 
             helper.itemView.setOnClickListener(v -> mItemTouchListener.onItemClick(data.content));
             final View leftMenu = helper.getView(R.id.left_menu);
