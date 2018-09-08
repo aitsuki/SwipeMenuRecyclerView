@@ -378,9 +378,6 @@ public class SwipeItemLayout extends FrameLayout {
         return false;
     }
 
-    /**
-     * 当菜单被ContentView遮住的时候，要设置菜单为Invisible，防止已隐藏的菜单接收到点击事件。
-     */
     private void updateMenu() {
         View contentView = getContentView();
         if (contentView != null) {
