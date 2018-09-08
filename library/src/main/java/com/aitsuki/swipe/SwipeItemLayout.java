@@ -3,6 +3,7 @@ package com.aitsuki.swipe;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ViewDragHelper;
@@ -128,6 +129,7 @@ public class SwipeItemLayout extends FrameLayout {
         return mIsDragged || super.onInterceptTouchEvent(ev);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (!mSwipeEnable) {
@@ -154,13 +156,12 @@ public class SwipeItemLayout extends FrameLayout {
                     obtain.setAction(MotionEvent.ACTION_CANCEL);
                     super.onTouchEvent(obtain);
                 }
-
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 if (mIsDragged || mIsOpen) {
-                    mDragHelper.processTouchEvent(ev);
                     // 拖拽后手指抬起，或者已经开启菜单，不应该响应到点击事件
+                    mDragHelper.processTouchEvent(ev);
                     ev.setAction(MotionEvent.ACTION_CANCEL);
                     mIsDragged = false;
                 }
@@ -172,7 +173,7 @@ public class SwipeItemLayout extends FrameLayout {
                 break;
         }
         return mIsDragged || super.onTouchEvent(ev)
-                // 此判断是因为当没有点击事件时，事件会给RecylcerView响应导致无法划开菜单。
+                // 此判断是因为当没有点击事件时，事件会给RecyclerView响应导致无法划开菜单。
                 || (!isClickable() && mMenus.size() > 0);
     }
 
@@ -212,7 +213,7 @@ public class SwipeItemLayout extends FrameLayout {
         }
 
         if (mIsDragged) {
-            // 开始拖动后，分发down事件给DragHelper，并且发送一个cancel取消点击事件
+            // 开始拖动后，分发down事件给DragHelper
             MotionEvent obtain = MotionEvent.obtain(ev);
             obtain.setAction(MotionEvent.ACTION_DOWN);
             mDragHelper.processTouchEvent(obtain);
@@ -260,7 +261,7 @@ public class SwipeItemLayout extends FrameLayout {
     /**
      * 判断down是否点击在Content上
      */
-    public boolean isTouchContent(int x, int y) {
+    private boolean isTouchContent(int x, int y) {
         View contentView = getContentView();
         if (contentView == null) {
             return false;
@@ -280,7 +281,7 @@ public class SwipeItemLayout extends FrameLayout {
         return mCurrentMenu != null && mCurrentMenu == mMenus.get(Gravity.RIGHT);
     }
 
-    public boolean isTouchMenu(int x, int y) {
+    private boolean isTouchMenu(int x, int y) {
         if (mCurrentMenu == null) {
             return false;
         }
@@ -357,10 +358,8 @@ public class SwipeItemLayout extends FrameLayout {
         if (mCurrentMenu != null) {
             int contentLeft = getContentView().getLeft();
             int menuWidth = mCurrentMenu.getWidth();
-            if (mIsOpen && ((isLeftMenu() && contentLeft < menuWidth)
-                    || (isRightMenu() && -contentLeft < menuWidth))) {
-                return true;
-            }
+            return mIsOpen && ((isLeftMenu() && contentLeft < menuWidth)
+                    || (isRightMenu() && -contentLeft < menuWidth));
         }
         return false;
     }
@@ -371,13 +370,13 @@ public class SwipeItemLayout extends FrameLayout {
     private boolean isCloseAnimating() {
         if (mCurrentMenu != null) {
             int contentLeft = getContentView().getLeft();
-            if (!mIsOpen && ((isLeftMenu() && contentLeft > 0) || (isRightMenu() && contentLeft < 0))) {
-                return true;
-            }
+            return !mIsOpen && ((isLeftMenu() && contentLeft > 0)
+                    || (isRightMenu() && contentLeft < 0));
         }
         return false;
     }
 
+    @SuppressLint("RtlHardcoded")
     private void updateMenu() {
         View contentView = getContentView();
         if (contentView != null) {
@@ -414,10 +413,6 @@ public class SwipeItemLayout extends FrameLayout {
      * @param listener SwipeListener
      */
     public void addSwipeListener(SwipeListener listener) {
-        if (listener == null) {
-            return;
-        }
-
         if (mListeners == null) {
             mListeners = new ArrayList<>();
         }
@@ -428,14 +423,9 @@ public class SwipeItemLayout extends FrameLayout {
      * 移除监听器
      */
     public void removeSwipeListener(SwipeListener listener) {
-        if (listener == null) {
+        if (listener == null || mListeners == null) {
             return;
         }
-
-        if (mListeners == null) {
-            return;
-        }
-
         mListeners.remove(listener);
     }
 
@@ -450,13 +440,13 @@ public class SwipeItemLayout extends FrameLayout {
     private class DragCallBack extends ViewDragHelper.Callback {
 
         @Override
-        public boolean tryCaptureView(View child, int pointerId) {
+        public boolean tryCaptureView(@NonNull View child, int pointerId) {
             // menu和content都可以抓取，因为在menu的宽度为MatchParent的时候，是无法点击到content的
             return child == getContentView() || mMenus.containsValue(child);
         }
 
         @Override
-        public int clampViewPositionHorizontal(View child, int left, int dx) {
+        public int clampViewPositionHorizontal(@NonNull View child, int left, int dx) {
 
             // 如果child是内容， 那么可以左划或右划，开启或关闭菜单
             if (child == getContentView()) {
@@ -497,13 +487,13 @@ public class SwipeItemLayout extends FrameLayout {
         }
 
         @Override
-        public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
+        public void onViewPositionChanged(@NonNull View changedView, int left, int top, int dx, int dy) {
             super.onViewPositionChanged(changedView, left, top, dx, dy);
             updateMenu();
         }
 
         @Override
-        public void onViewReleased(View releasedChild, float xvel, float yvel) {
+        public void onViewReleased(@NonNull View releasedChild, float xvel, float yvel) {
             Log.e(TAG, "onViewReleased: " + xvel + " ,releasedChild = " + releasedChild);
             if (isLeftMenu()) {
                 if (xvel > mVelocity) {
