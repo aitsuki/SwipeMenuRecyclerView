@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="SwipeLayout">
+    <declare-styleable name="SwipeItemLayout">
         <attr name="preview" format="enum">
             <enum name="noPreview" value="-1"/>
             <enum name="openLeft" value="0"/>
             <enum name="openRight" value="1"/>
         </attr>
+    </declare-styleable>
+
+    <declare-styleable name="SwipeMenuRecyclerView">
+        <attr name="enableTouchAlways" format="boolean"/>
     </declare-styleable>
 
 </resources>

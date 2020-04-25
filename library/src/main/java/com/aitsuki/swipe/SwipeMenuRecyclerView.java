@@ -1,13 +1,15 @@
 package com.aitsuki.swipe;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Rect;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by AItsuki on 2017/2/23.
@@ -17,31 +19,48 @@ import android.view.ViewGroup;
  */
 public class SwipeMenuRecyclerView extends RecyclerView {
 
+    private boolean enableTouchAlways = false;
+
     public SwipeMenuRecyclerView(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public SwipeMenuRecyclerView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public SwipeMenuRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        if (attrs != null) {
+            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SwipeMenuRecyclerView);
+            enableTouchAlways = a.getBoolean(R.styleable.SwipeMenuRecyclerView_enableTouchAlways, false);
+            a.recycle();
+        }
+    }
+
+    public void setEnableTouchAlways(boolean enableTouchAlways) {
+        this.enableTouchAlways = enableTouchAlways;
+    }
+
+    public boolean isEnableTouchAlways() {
+        return enableTouchAlways;
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         int action = ev.getActionMasked();
-        // 手指按下的时候，如果有开启的菜单，只要手指不是落在该Item上，则关闭菜单, 并且不分发事件。
+        int x = (int) ev.getX();
+        int y = (int) ev.getY();
+        // 手指按下的时候，如果有开启的菜单，只要手指不是落在该Item上，则关闭菜单。
         if (action == MotionEvent.ACTION_DOWN) {
-            int x = (int) ev.getX();
-            int y = (int) ev.getY();
             View openItem = findOpenItem();
             if (openItem != null && openItem != getTouchItem(x, y)) {
                 SwipeItemLayout swipeItemLayout = findSwipeItemLayout(openItem);
                 if (swipeItemLayout != null) {
                     swipeItemLayout.close();
-                    return false;
+                    if (!enableTouchAlways) {
+                        return false;
+                    }
                 }
             }
         } else if (action == MotionEvent.ACTION_POINTER_DOWN) {

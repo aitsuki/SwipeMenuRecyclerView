@@ -2,11 +2,9 @@ package com.aitsuki.swipe;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -15,6 +13,11 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.annotation.NonNull;
+import androidx.core.view.GravityCompat;
+import androidx.core.view.ViewCompat;
+import androidx.customview.widget.ViewDragHelper;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,10 +28,15 @@ import java.util.List;
  * 1. 最多同时设置两个菜单
  * 2. 菜单必须设置layoutGravity属性. start left end right
  */
+@SuppressLint("RtlHardcoded")
 public class SwipeItemLayout extends FrameLayout {
 
     public static final String TAG = "SwipeItemLayout";
+    public static final int PREVIEW_UNSPECIFIED = -1;
+    public static final int PREVIEW_LEFT = 0;
+    public static final int PREVIEW_RIGHT = 1;
 
+    private int preview = PREVIEW_UNSPECIFIED;
     private ViewDragHelper mDragHelper;
     private int mTouchSlop;
     private int mVelocity;
@@ -69,15 +77,44 @@ public class SwipeItemLayout extends FrameLayout {
 
     public SwipeItemLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        // 因为当没有点击事件时，事件会给RecyclerView响应导致无法划开菜单。
+        setClickable(true);
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mVelocity = ViewConfiguration.get(context).getScaledMinimumFlingVelocity();
         mDragHelper = ViewDragHelper.create(this, new DragCallBack());
+
+        if (attrs != null) {
+            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SwipeItemLayout);
+            preview = a.getInt(R.styleable.SwipeItemLayout_preview, PREVIEW_UNSPECIFIED);
+            a.recycle();
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if (isInEditMode()) {
+            if (preview == PREVIEW_LEFT) {
+                View menu = mMenus.get(Gravity.LEFT);
+                View content = getContentView();
+                if (menu != null && menu != content) {
+                    content.layout(
+                            menu.getMeasuredWidth(),
+                            content.getTop(),
+                            content.getRight() + menu.getMeasuredWidth(),
+                            content.getBottom());
+                }
+            } else if (preview == PREVIEW_RIGHT) {
+                View menu = mMenus.get(Gravity.RIGHT);
+                View content = getContentView();
+                if (menu != null && menu != content) {
+                    content.layout(
+                            -menu.getMeasuredWidth(),
+                            content.getTop(),
+                            content.getRight() - menu.getMeasuredWidth(),
+                            content.getBottom());
+                }
+            }
             return;
         }
         updateMenu();
@@ -139,7 +176,7 @@ public class SwipeItemLayout extends FrameLayout {
             return super.onTouchEvent(ev);
         }
 
-        int action = ev.getAction();
+        int action = ev.getActionMasked();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 mIsDragged = false;
@@ -175,15 +212,13 @@ public class SwipeItemLayout extends FrameLayout {
                 }
                 break;
         }
-        return mIsDragged || super.onTouchEvent(ev)
-                // 此判断是因为当没有点击事件时，事件会给RecyclerView响应导致无法划开菜单。
-                || (!isClickable() && mMenus.size() > 0);
+        return mIsDragged || super.onTouchEvent(ev);
+//                || (!isClickable() && mMenus.size() > 0);
     }
 
     /**
      * 判断是否可以拖拽View
      */
-    @SuppressLint("RtlHardcoded")
     private void checkCanDragged(MotionEvent ev) {
         if (mIsDragged) {
             return;
@@ -228,14 +263,9 @@ public class SwipeItemLayout extends FrameLayout {
     }
 
     // 最后一个是内容，倒数第1第2个设置了layout_gravity = right or left的是菜单，其余的忽略
-    @SuppressLint("RtlHardcoded")
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
         super.addView(child, index, params);
-        if (isInEditMode()) {
-            return;
-        }
-
         LayoutParams lp = (LayoutParams) child.getLayoutParams();
         int gravity = GravityCompat.getAbsoluteGravity(lp.gravity, ViewCompat.getLayoutDirection(child));
         switch (gravity) {
@@ -278,12 +308,10 @@ public class SwipeItemLayout extends FrameLayout {
         return rect.contains(x, y);
     }
 
-    @SuppressLint("RtlHardcoded")
     private boolean isLeftMenu() {
         return mCurrentMenu != null && mCurrentMenu == mMenus.get(Gravity.LEFT);
     }
 
-    @SuppressLint("RtlHardcoded")
     private boolean isRightMenu() {
         return mCurrentMenu != null && mCurrentMenu == mMenus.get(Gravity.RIGHT);
     }
@@ -383,7 +411,6 @@ public class SwipeItemLayout extends FrameLayout {
         return false;
     }
 
-    @SuppressLint("RtlHardcoded")
     private void updateMenu() {
         View contentView = getContentView();
         if (contentView != null) {
@@ -458,11 +485,9 @@ public class SwipeItemLayout extends FrameLayout {
             // 如果child是内容， 那么可以左划或右划，开启或关闭菜单
             if (child == getContentView()) {
                 if (isRightMenu()) {
-                    return left > 0 ? 0 : left < -mCurrentMenu.getWidth() ?
-                            -mCurrentMenu.getWidth() : left;
+                    return left > 0 ? 0 : left < -mCurrentMenu.getWidth() ? -mCurrentMenu.getWidth() : left;
                 } else if (isLeftMenu()) {
-                    return left > mCurrentMenu.getWidth() ? mCurrentMenu.getWidth() : left < 0 ?
-                            0 : left;
+                    return left > mCurrentMenu.getWidth() ? mCurrentMenu.getWidth() : Math.max(left, 0);
                 }
             }
 
