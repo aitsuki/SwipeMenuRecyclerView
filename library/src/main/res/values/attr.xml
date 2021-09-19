@@ -3,10 +3,11 @@
 
     <declare-styleable name="SwipeItemLayout">
         <attr name="preview" format="enum">
-            <enum name="noPreview" value="-1"/>
-            <enum name="openLeft" value="0"/>
-            <enum name="openRight" value="1"/>
+            <enum name="none" value="-1"/>
+            <enum name="left" value="0"/>
+            <enum name="right" value="1"/>
         </attr>
+        <attr name="autoClose" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="SwipeMenuRecyclerView">

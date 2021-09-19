@@ -57,7 +57,7 @@ public class SwipeMenuRecyclerView extends RecyclerView {
             if (openItem != null && openItem != getTouchItem(x, y)) {
                 SwipeItemLayout swipeItemLayout = findSwipeItemLayout(openItem);
                 if (swipeItemLayout != null) {
-                    swipeItemLayout.close();
+                    swipeItemLayout.closeMenu();
                     if (!enableTouchAlways) {
                         return false;
                     }
