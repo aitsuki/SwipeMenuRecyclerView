@@ -55,9 +55,9 @@ public class SwipeMenuRecyclerView extends RecyclerView {
         if (action == MotionEvent.ACTION_DOWN) {
             View openItem = findOpenItem();
             if (openItem != null && openItem != getTouchItem(x, y)) {
-                SwipeItemLayout swipeItemLayout = findSwipeItemLayout(openItem);
-                if (swipeItemLayout != null) {
-                    swipeItemLayout.closeMenu();
+                SwipeLayout swipeLayout = findSwipeItemLayout(openItem);
+                if (swipeLayout != null) {
+                    swipeLayout.closeMenu(true);
                     if (!enableTouchAlways) {
                         return false;
                     }
@@ -95,8 +95,8 @@ public class SwipeMenuRecyclerView extends RecyclerView {
     private View findOpenItem() {
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
-            SwipeItemLayout swipeItemLayout = findSwipeItemLayout(getChildAt(i));
-            if (swipeItemLayout != null && swipeItemLayout.isOpen()) {
+            SwipeLayout swipeLayout = findSwipeItemLayout(getChildAt(i));
+            if (swipeLayout != null && swipeLayout.isOpenOrOpening$library_debug()) {
                 return getChildAt(i);
             }
         }
@@ -107,14 +107,14 @@ public class SwipeMenuRecyclerView extends RecyclerView {
      * 获取该View
      */
     @Nullable
-    private SwipeItemLayout findSwipeItemLayout(View view) {
-        if (view instanceof SwipeItemLayout) {
-            return (SwipeItemLayout) view;
+    private SwipeLayout findSwipeItemLayout(View view) {
+        if (view instanceof SwipeLayout) {
+            return (SwipeLayout) view;
         } else if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
             int count = group.getChildCount();
             for (int i = 0; i < count; i++) {
-                SwipeItemLayout swipeLayout = findSwipeItemLayout(group.getChildAt(i));
+                SwipeLayout swipeLayout = findSwipeItemLayout(group.getChildAt(i));
                 if (swipeLayout != null) {
                     return swipeLayout;
                 }

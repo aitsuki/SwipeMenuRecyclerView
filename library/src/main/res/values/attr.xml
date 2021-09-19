@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="SwipeItemLayout">
+    <declare-styleable name="SwipeLayout">
         <attr name="preview" format="enum">
             <enum name="none" value="-1"/>
             <enum name="left" value="0"/>

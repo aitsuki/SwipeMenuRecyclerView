@@ -16,85 +16,115 @@ private const val TAG = "SwipeItemLayout"
 /**
  * Created by AItsuki on 2017/2/23.
  */
-class SwipeItemLayout @JvmOverloads constructor(
+// TODO: 2021/9/20 测试 paddingLeft 对 contentView.left 和 menuView 的影响
+class SwipeLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
+
+    /* Attribute */
+    private var preview = PREVIEW_UNSPECIFIED
+    private var autoClose = true
+
+    /* Motion events */
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private val velocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
+    private val dragger = ViewDragHelper.create(this, ViewDragCallback())
+    private var isDragging = false
+    private var initialMotionX = 0f
+    private var initialMotionY = 0f
+    private var alwaysInTapRegion = false
+
+    /* State and listener */
+    private var openState = 0
+    private var activeMenu: View? = null
+    private val listeners = arrayListOf<Listener>()
+    internal val isOpenOrOpening get() = openState and FLAG_IS_OPENED == FLAG_IS_OPENED
+            || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
+
+    /* Child views */
+    private val contentView: View? get() = getChildAt(childCount - 1)
+    private var leftMenu: View? = null
+    private var rightMenu: View? = null
 
     var swipeEnable = true
         set(value) {
             closeActiveMenu()
             field = value
         }
-    private var preview = PREVIEW_UNSPECIFIED
-    private var autoClose = true
-
-    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
-    private val velocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
-    private val dragger = ViewDragHelper.create(this, ViewDragCallback())
-
-    private val contentView: View? get() = getChildAt(childCount - 1)
-    private var leftMenu: View? = null
-    private var rightMenu: View? = null
-
-    private var isOpen = false
-    private var activeMenu: View? = null
-    private var isDragging = false
-    private var initialMotionX = 0f
-    private var initialMotionY = 0f
-    private var alwaysInTapRegion = false
 
     init {
         isClickable = true
         if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SwipeItemLayout)
-            preview = a.getInt(R.styleable.SwipeItemLayout_preview, preview)
-            autoClose = a.getBoolean(R.styleable.SwipeItemLayout_autoClose, autoClose)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.SwipeLayout)
+            preview = a.getInt(R.styleable.SwipeLayout_preview, preview)
+            autoClose = a.getBoolean(R.styleable.SwipeLayout_autoClose, autoClose)
             a.recycle()
         }
     }
 
-    fun closeMenu() {
-        closeActiveMenu()
+    fun closeMenu(animate: Boolean = true) {
+        closeActiveMenu(animate)
     }
 
-    fun openLeftMenu() {
+    fun isLeftMenuOpened(): Boolean {
+        val activeMenu = activeMenu ?: return false
+        return activeMenu == leftMenu && openState and FLAG_IS_OPENED == FLAG_IS_OPENED
+    }
+
+    fun isRightMenuOpened(): Boolean {
+        val activeMenu = activeMenu ?: return false
+        return activeMenu == rightMenu && openState and FLAG_IS_OPENED == FLAG_IS_OPENED
+    }
+
+    fun openLeftMenu(animate: Boolean = true) {
         activeMenu = leftMenu
-        openActiveMenu()
+        openActiveMenu(animate)
     }
 
-    fun openRightMenu() {
+    fun openRightMenu(animate: Boolean = true) {
         activeMenu = rightMenu
-        openActiveMenu()
+        openActiveMenu(animate)
     }
 
-    fun isOpen(): Boolean {
-        return isOpen
+    fun addListener(listener: Listener) {
+        listeners.add(listener)
     }
 
-    private fun closeActiveMenu() {
+    fun removeListener(listener: Listener) {
+        listeners.remove(listener)
+    }
+
+    private fun closeActiveMenu(animate: Boolean = true) {
         if (activeMenu == null) {
-            isOpen = false
+            openState = 0
             return
         }
         val contentView = contentView ?: return
-        dragger.smoothSlideViewTo(contentView, paddingLeft, paddingTop)
-        isOpen = false
+        if (animate) {
+            openState = openState or FLAG_IS_CLOSING
+            dragger.smoothSlideViewTo(contentView, 0, contentView.top)
+        } else {
+            contentView.offsetLeftAndRight(-contentView.left)
+            updateMenuState(STATE_IDLE)
+        }
         invalidate()
     }
 
-    private fun openActiveMenu() {
+    private fun openActiveMenu(animate: Boolean = true) {
         if (activeMenu == null) {
-            isOpen = false
+            openState = 0
             return
         }
-        val activeMenu = activeMenu ?: return
         val contentView = contentView ?: return
-        if (activeMenu == leftMenu) {
-            dragger.smoothSlideViewTo(contentView, activeMenu.width, paddingTop)
+        val activeMenu = activeMenu ?: return
+        val left = if (activeMenu == leftMenu) activeMenu.width else -activeMenu.width
+        if (animate) {
+            openState = openState or FLAG_IS_OPENING
+            dragger.smoothSlideViewTo(contentView, left, contentView.top)
         } else {
-            dragger.smoothSlideViewTo(contentView, -activeMenu.width, paddingTop)
+            contentView.offsetLeftAndRight(left - contentView.left)
+            updateMenuState(STATE_IDLE)
         }
-        isOpen = true
         invalidate()
     }
 
@@ -103,15 +133,16 @@ class SwipeItemLayout @JvmOverloads constructor(
         if (isInEditMode) {
             preview()
         } else {
-            updateMenu()
+            updateMenuLayout()
         }
     }
 
     /**
      * 更新菜单，通过这个方法可以自定义menuView的样式。例如overlap，linear，parallax...
      */
-    private fun updateMenu() {
+    private fun updateMenuLayout() {
         val contentView = contentView ?: return
+
         // 将菜单移出屏幕，防止关闭的情况下被点击
         if (contentView.left == 0) {
             leftMenu?.let { it.layout(-it.width, it.top, 0, it.bottom) }
@@ -133,6 +164,38 @@ class SwipeItemLayout @JvmOverloads constructor(
             )
         }
     }
+
+    private fun updateMenuState(activeState: Int) {
+        val contentView = contentView ?: return
+        val activeMenu = activeMenu ?: return
+
+        if (activeState == STATE_IDLE) {
+            if (contentView.left == 0) {
+                dispatchOnMenuClosed(activeMenu)
+            } else {
+                dispatchOnMenuOpened(activeMenu)
+            }
+        }
+    }
+
+    private fun dispatchOnMenuClosed(menuView: View) {
+        if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED) {
+            openState = 0
+            for (listener in listeners.asReversed()) {
+                listener.onClosed(menuView)
+            }
+        }
+    }
+
+    private fun dispatchOnMenuOpened(menuView: View) {
+        if (openState and FLAG_IS_OPENED == 0) {
+            openState = FLAG_IS_OPENED
+            for (listener in listeners.asReversed()) {
+                listener.onOpened(menuView)
+            }
+        }
+    }
+
 
     /**
      * 编辑模式下可以预览: `app:preview="left|right|none"`
@@ -175,7 +238,7 @@ class SwipeItemLayout @JvmOverloads constructor(
         val isRightDragging = dx > touchSlop && dx > abs(dy)
         val isLeftDragging = dx < -touchSlop && abs(dx) > abs(dy)
 
-        if (isOpen) {
+        if (isOpenOrOpening) {
             // 开启状态下，点击在content上直接捕获事件，点击在菜单上则判断touchSlop
             val initX = initialMotionX.toInt()
             val initY = initialMotionY.toInt()
@@ -206,9 +269,20 @@ class SwipeItemLayout @JvmOverloads constructor(
         }
     }
 
+    /**
+     * 类似于GestureDetector的SingleTap，用于关闭菜单。
+     */
+    private fun detectAlwaysInTapRegion(ev: MotionEvent) {
+        val dx = (ev.x - initialMotionX).toInt()
+        val dy = (ev.y - initialMotionY).toInt()
+        val distance = (dx * dx) + (dy * dy)
+        if (distance > touchSlop * touchSlop) {
+            alwaysInTapRegion = false
+        }
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        Log.d(TAG, "onTouchEvent: $ev")
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 isDragging = false
@@ -254,20 +328,7 @@ class SwipeItemLayout @JvmOverloads constructor(
         return isDragging || super.onTouchEvent(ev)
     }
 
-    /**
-     * 类似于GestureDetector的SingleTap，用于关闭菜单。
-     */
-    private fun detectAlwaysInTapRegion(ev: MotionEvent) {
-        val dx = (ev.x - initialMotionX).toInt()
-        val dy = (ev.y - initialMotionY).toInt()
-        val distance = (dx * dx) + (dy * dy)
-        if (distance > touchSlop * touchSlop) {
-            alwaysInTapRegion = false
-        }
-    }
-
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        Log.d(TAG, "onInterceptTouchEvent: $ev")
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 isDragging = false
@@ -310,9 +371,24 @@ class SwipeItemLayout @JvmOverloads constructor(
             return swipeEnable && (child == contentView || child == leftMenu || child == rightMenu)
         }
 
+        override fun onViewPositionChanged(child: View, left: Int, top: Int, dx: Int, dy: Int) {
+            updateMenuLayout()
+        }
+
+        override fun onViewDragStateChanged(state: Int) {
+            val stateStr = when (state) {
+                STATE_IDLE -> "idle"
+                STATE_DRAGGING -> "dragging"
+                STATE_SETTLING -> "settling"
+                else -> "unknown"
+            }
+            Log.d(TAG, "onViewDragStateChanged: $stateStr")
+            updateMenuState(state)
+        }
+
         override fun clampViewPositionHorizontal(child: View, left: Int, dx: Int): Int {
-            val contentView = contentView ?: return 0
-            val activeMenu = activeMenu ?: return 0
+            val contentView = contentView ?: return child.left
+            val activeMenu = activeMenu ?: return child.left
             when (child) {
                 contentView -> return if (activeMenu == leftMenu) {
                     left.coerceIn(0, activeMenu.width)
@@ -332,8 +408,8 @@ class SwipeItemLayout @JvmOverloads constructor(
             return child.left
         }
 
-        override fun onViewPositionChanged(child: View, left: Int, top: Int, dx: Int, dy: Int) {
-            updateMenu()
+        override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
+            return child.top
         }
 
         /**
@@ -346,14 +422,14 @@ class SwipeItemLayout @JvmOverloads constructor(
                 when {
                     xvel > velocity -> openActiveMenu()
                     xvel < -velocity -> closeActiveMenu()
-                    contentView.left > activeMenu.width / 3 * 2 -> openActiveMenu()
+                    contentView.left > activeMenu.width / 2 -> openActiveMenu()
                     else -> closeActiveMenu()
                 }
             } else {
                 when {
                     xvel < -velocity -> openActiveMenu()
                     xvel > velocity -> closeActiveMenu()
-                    contentView.left < -activeMenu.width / 3 * 2 -> openActiveMenu()
+                    contentView.left < -activeMenu.width / 2 -> openActiveMenu()
                     else -> closeActiveMenu()
                 }
             }
@@ -394,9 +470,23 @@ class SwipeItemLayout @JvmOverloads constructor(
         return activeMenu == dragger.findTopChildUnder(x, y)
     }
 
-    private companion object {
+    companion object {
         private const val PREVIEW_UNSPECIFIED = -1
         private const val PREVIEW_LEFT = 0
         private const val PREVIEW_RIGHT = 1
+
+        private const val FLAG_IS_OPENED = 0x1
+        private const val FLAG_IS_OPENING = 0x2
+        private const val FLAG_IS_CLOSING = 0x4
+
+        const val STATE_IDLE = ViewDragHelper.STATE_IDLE
+        const val STATE_DRAGGING = ViewDragHelper.STATE_DRAGGING
+        const val STATE_SETTLING = ViewDragHelper.STATE_SETTLING
+    }
+
+    interface Listener {
+        fun onOpened(menuView: View)
+
+        fun onClosed(menuView: View)
     }
 }

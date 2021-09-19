@@ -9,11 +9,12 @@
     tools:context="com.aitsuki.swipedemo.MainActivity"
     tools:ignore="HardcodedText">
 
-    <com.aitsuki.swipe.SwipeItemLayout
+    <com.aitsuki.swipe.SwipeLayout
         android:id="@+id/swipe_layout"
         android:layout_width="match_parent"
         android:layout_height="100dp"
         app:autoClose="true"
+        android:padding="20dp"
         app:preview="none">
 
         <TextView
@@ -47,6 +48,6 @@
             android:text="Content"
             android:textSize="30sp" />
 
-    </com.aitsuki.swipe.SwipeItemLayout>
+    </com.aitsuki.swipe.SwipeLayout>
 
 </LinearLayout>

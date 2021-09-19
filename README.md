@@ -7,10 +7,10 @@
 <b>Step 1. Add the JitPack repository to your build file</b>
 Add it in your root `build.gradle` at the end of repositories:
 
-```
+```groovy
 	allprojects {
 		repositories {
-			...
+			//...
 			maven { url 'https://jitpack.io' }
 		}
 	}
@@ -18,16 +18,8 @@ Add it in your root `build.gradle` at the end of repositories:
 
 <b>Step 2. Add the dependency</b>
 
-```
+```groovy
 dependencies {
 	        compile 'com.github.AItsuki:SwipeMenuRecyclerView:1.1.4'
 	}
 ```
-
-# 存在问题
-
-## 点击事件bug
-
-`SwipeItemLayout`默认设置了`clickable`为true，会拦截掉parent的点击事件。所以如果SwipeItemLayout不是RecyclerView的Item的根布局，那么通过`ViewHolder.itemView.setOnClickListener`设置的点击时间将不起作用。需要将点击事件设置到`SwipeItemLayout`上。
-
-
