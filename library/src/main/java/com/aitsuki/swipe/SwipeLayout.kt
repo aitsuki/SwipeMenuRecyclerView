@@ -16,7 +16,6 @@ private const val TAG = "SwipeItemLayout"
 /**
  * Created by AItsuki on 2017/2/23.
  */
-// TODO: 2021/9/20 测试 paddingLeft 对 contentView.left 和 menuView 的影响
 class SwipeLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
@@ -38,8 +37,9 @@ class SwipeLayout @JvmOverloads constructor(
     private var openState = 0
     private var activeMenu: View? = null
     private val listeners = arrayListOf<Listener>()
-    internal val isOpenOrOpening get() = openState and FLAG_IS_OPENED == FLAG_IS_OPENED
-            || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
+    internal val isOpenOrOpening
+        get() = openState and FLAG_IS_OPENED == FLAG_IS_OPENED
+                || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
 
     /* Child views */
     private val contentView: View? get() = getChildAt(childCount - 1)
@@ -102,9 +102,9 @@ class SwipeLayout @JvmOverloads constructor(
         val contentView = contentView ?: return
         if (animate) {
             openState = openState or FLAG_IS_CLOSING
-            dragger.smoothSlideViewTo(contentView, 0, contentView.top)
+            dragger.smoothSlideViewTo(contentView, paddingLeft, contentView.top)
         } else {
-            contentView.offsetLeftAndRight(-contentView.left)
+            contentView.offsetLeftAndRight(-contentView.left + paddingLeft)
             updateMenuState(STATE_IDLE)
         }
         invalidate()
@@ -117,7 +117,8 @@ class SwipeLayout @JvmOverloads constructor(
         }
         val contentView = contentView ?: return
         val activeMenu = activeMenu ?: return
-        val left = if (activeMenu == leftMenu) activeMenu.width else -activeMenu.width
+        val left = if (activeMenu == leftMenu) activeMenu.width + paddingLeft
+        else -activeMenu.width + paddingLeft
         if (animate) {
             openState = openState or FLAG_IS_OPENING
             dragger.smoothSlideViewTo(contentView, left, contentView.top)
@@ -144,22 +145,28 @@ class SwipeLayout @JvmOverloads constructor(
         val contentView = contentView ?: return
 
         // 将菜单移出屏幕，防止关闭的情况下被点击
-        if (contentView.left == 0) {
-            leftMenu?.let { it.layout(-it.width, it.top, 0, it.bottom) }
+        if (contentView.left == paddingLeft) {
+            leftMenu?.let {
+                it.layout(paddingLeft - it.width, it.top, paddingLeft, it.bottom)
+            }
             rightMenu?.let {
-                it.layout(measuredWidth, it.top, measuredWidth + it.width, it.bottom)
+                it.layout(
+                    right - paddingRight, it.top, right - paddingRight + it.width, it.bottom
+                )
             }
             return
         }
 
         val activeMenu = activeMenu ?: return
-        if (activeMenu == leftMenu && activeMenu.left != 0) {
-            activeMenu.layout(0, activeMenu.top, activeMenu.measuredWidth, activeMenu.bottom)
-        } else if (activeMenu == rightMenu && activeMenu.right != measuredWidth) {
+        if (activeMenu == leftMenu && activeMenu.left != paddingLeft) {
             activeMenu.layout(
-                measuredWidth - activeMenu.measuredWidth,
+                paddingLeft, activeMenu.top, paddingLeft + activeMenu.width, activeMenu.bottom
+            )
+        } else if (activeMenu == rightMenu && activeMenu.right != right - paddingLeft) {
+            activeMenu.layout(
+                right - paddingLeft - activeMenu.width,
                 activeMenu.top,
-                measuredWidth,
+                right - paddingLeft,
                 activeMenu.bottom
             )
         }
@@ -170,7 +177,7 @@ class SwipeLayout @JvmOverloads constructor(
         val activeMenu = activeMenu ?: return
 
         if (activeState == STATE_IDLE) {
-            if (contentView.left == 0) {
+            if (contentView.left == paddingLeft) {
                 dispatchOnMenuClosed(activeMenu)
             } else {
                 dispatchOnMenuOpened(activeMenu)
@@ -391,17 +398,18 @@ class SwipeLayout @JvmOverloads constructor(
             val activeMenu = activeMenu ?: return child.left
             when (child) {
                 contentView -> return if (activeMenu == leftMenu) {
-                    left.coerceIn(0, activeMenu.width)
+                    left.coerceIn(paddingLeft, activeMenu.width + paddingLeft)
                 } else {
-                    left.coerceIn(-activeMenu.width, 0)
+                    left.coerceIn(paddingLeft - activeMenu.width, paddingLeft)
                 }
                 leftMenu -> {
-                    val offset = (contentView.left + dx).coerceIn(0, child.width) - contentView.left
+                    val offset = (contentView.left + dx)
+                        .coerceIn(paddingLeft, child.width + paddingLeft) - contentView.left
                     ViewCompat.offsetLeftAndRight(contentView, offset)
                 }
                 rightMenu -> {
-                    val offset =
-                        (contentView.left + dx).coerceIn(-child.width, 0) - contentView.left
+                    val offset = (contentView.left + dx)
+                        .coerceIn(paddingLeft - child.width, paddingLeft) - contentView.left
                     ViewCompat.offsetLeftAndRight(contentView, offset)
                 }
             }
@@ -422,14 +430,14 @@ class SwipeLayout @JvmOverloads constructor(
                 when {
                     xvel > velocity -> openActiveMenu()
                     xvel < -velocity -> closeActiveMenu()
-                    contentView.left > activeMenu.width / 2 -> openActiveMenu()
+                    contentView.left - paddingLeft > activeMenu.width / 2 -> openActiveMenu()
                     else -> closeActiveMenu()
                 }
             } else {
                 when {
                     xvel < -velocity -> openActiveMenu()
                     xvel > velocity -> closeActiveMenu()
-                    contentView.left < -activeMenu.width / 2 -> openActiveMenu()
+                    contentView.left - paddingLeft < -activeMenu.width / 2 -> openActiveMenu()
                     else -> closeActiveMenu()
                 }
             }
