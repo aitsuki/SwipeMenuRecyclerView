@@ -2,6 +2,7 @@ package com.aitsuki.swipe
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -11,7 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.customview.widget.ViewDragHelper
 import kotlin.math.abs
 
-private const val TAG = "SwipeItemLayout"
+private const val TAG = "SwipeLayout"
 
 /**
  * Created by AItsuki on 2017/2/23.
@@ -36,6 +37,8 @@ class SwipeLayout @JvmOverloads constructor(
     /* State and listener */
     private var openState = 0
     private var activeMenu: View? = null
+    private var onScreen = 0f
+    private var firstLayout = true
     private val listeners = arrayListOf<Listener>()
     internal val isOpenOrOpening
         get() = openState and FLAG_IS_OPENED == FLAG_IS_OPENED
@@ -45,6 +48,7 @@ class SwipeLayout @JvmOverloads constructor(
     private val contentView: View? get() = getChildAt(childCount - 1)
     private var leftMenu: View? = null
     private var rightMenu: View? = null
+    private lateinit var menuDesigner: MenuDesigner
 
     var swipeEnable = true
         set(value) {
@@ -60,6 +64,7 @@ class SwipeLayout @JvmOverloads constructor(
             autoClose = a.getBoolean(R.styleable.SwipeLayout_autoClose, autoClose)
             a.recycle()
         }
+        menuDesigner = OverlayDesigner()
     }
 
     fun closeMenu(animate: Boolean = true) {
@@ -100,11 +105,13 @@ class SwipeLayout @JvmOverloads constructor(
             return
         }
         val contentView = contentView ?: return
+        val activeMenu = activeMenu ?: return
         if (animate) {
             openState = openState or FLAG_IS_CLOSING
             dragger.smoothSlideViewTo(contentView, paddingLeft, contentView.top)
         } else {
             contentView.offsetLeftAndRight(-contentView.left + paddingLeft)
+            dispatchOnSwipe(activeMenu, 0f)
             updateMenuState(STATE_IDLE)
         }
         invalidate()
@@ -124,6 +131,7 @@ class SwipeLayout @JvmOverloads constructor(
             dragger.smoothSlideViewTo(contentView, left, contentView.top)
         } else {
             contentView.offsetLeftAndRight(left - contentView.left)
+            dispatchOnSwipe(activeMenu, 1f)
             updateMenuState(STATE_IDLE)
         }
         invalidate()
@@ -131,65 +139,45 @@ class SwipeLayout @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
+        if (firstLayout) {
+            firstLayout = false
+            menuDesigner.onFirstLayout(this, leftMenu, rightMenu)
+        }
+
         if (isInEditMode) {
-            preview()
-        } else {
-            updateMenuLayout()
-        }
-    }
-
-    /**
-     * 更新菜单，通过这个方法可以自定义menuView的样式。例如overlap，linear，parallax...
-     */
-    private fun updateMenuLayout() {
-        val contentView = contentView ?: return
-
-        // 将菜单移出屏幕，防止关闭的情况下被点击
-        if (contentView.left == paddingLeft) {
-            leftMenu?.let {
-                it.layout(paddingLeft - it.width, it.top, paddingLeft, it.bottom)
+            if (preview == PREVIEW_LEFT) {
+                openLeftMenu(false)
+            } else if (preview == PREVIEW_RIGHT) {
+                openRightMenu(false)
             }
-            rightMenu?.let {
-                it.layout(
-                    right - paddingRight, it.top, right - paddingRight + it.width, it.bottom
-                )
-            }
-            return
-        }
-
-        val activeMenu = activeMenu ?: return
-        if (activeMenu == leftMenu && activeMenu.left != paddingLeft) {
-            activeMenu.layout(
-                paddingLeft, activeMenu.top, paddingLeft + activeMenu.width, activeMenu.bottom
-            )
-        } else if (activeMenu == rightMenu && activeMenu.right != right - paddingLeft) {
-            activeMenu.layout(
-                right - paddingLeft - activeMenu.width,
-                activeMenu.top,
-                right - paddingLeft,
-                activeMenu.bottom
-            )
         }
     }
 
     private fun updateMenuState(activeState: Int) {
-        val contentView = contentView ?: return
         val activeMenu = activeMenu ?: return
 
+        for (listener in listeners.asReversed()) {
+            listener.onSwipeStateChanged(activeMenu, activeState)
+        }
+
+
+
         if (activeState == STATE_IDLE) {
-            if (contentView.left == paddingLeft) {
-                dispatchOnMenuClosed(activeMenu)
-            } else {
+            if (onScreen == 1f) {
                 dispatchOnMenuOpened(activeMenu)
+            } else {
+                dispatchOnMenuClosed(activeMenu)
             }
         }
+
+
     }
 
     private fun dispatchOnMenuClosed(menuView: View) {
         if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED) {
             openState = 0
             for (listener in listeners.asReversed()) {
-                listener.onClosed(menuView)
+                listener.onMenuClosed(menuView)
             }
         }
     }
@@ -198,43 +186,16 @@ class SwipeLayout @JvmOverloads constructor(
         if (openState and FLAG_IS_OPENED == 0) {
             openState = FLAG_IS_OPENED
             for (listener in listeners.asReversed()) {
-                listener.onOpened(menuView)
+                listener.onMenuOpened(menuView)
             }
         }
     }
 
-
-    /**
-     * 编辑模式下可以预览: `app:preview="left|right|none"`
-     */
-    private fun preview() {
-        if (preview == PREVIEW_LEFT) {
-            previewLeftMenu()
-        } else if (preview == PREVIEW_RIGHT) {
-            previewRightMenu()
+    private fun dispatchOnSwipe(menuView: View, offset: Float) {
+        onScreen = offset
+        for (listener in listeners.asReversed()) {
+            listener.onSwipe(menuView, offset)
         }
-    }
-
-    private fun previewLeftMenu() {
-        val leftMenu = leftMenu ?: return
-        val contentView = contentView ?: return
-        contentView.layout(
-            leftMenu.measuredWidth,
-            contentView.top,
-            contentView.right + leftMenu.measuredWidth,
-            contentView.bottom
-        )
-    }
-
-    private fun previewRightMenu() {
-        val rightMenu = rightMenu ?: return
-        val contentView = contentView ?: return
-        contentView.layout(
-            -rightMenu.measuredWidth,
-            contentView.top,
-            contentView.right - rightMenu.measuredWidth,
-            contentView.bottom
-        )
     }
 
     private fun checkCanDrag(ev: MotionEvent) {
@@ -379,7 +340,16 @@ class SwipeLayout @JvmOverloads constructor(
         }
 
         override fun onViewPositionChanged(child: View, left: Int, top: Int, dx: Int, dy: Int) {
-            updateMenuLayout()
+            val contentView = contentView ?: return
+            val activeMenu = activeMenu ?: return
+            val offset = if (activeMenu == leftMenu) {
+                (contentView.left - paddingLeft).toFloat() / activeMenu.width
+            } else {
+                (right - paddingRight - contentView.right).toFloat() / activeMenu.width
+            }
+            if (onScreen != offset) {
+                dispatchOnSwipe(activeMenu, offset)
+            }
         }
 
         override fun onViewDragStateChanged(state: Int) {
@@ -425,19 +395,18 @@ class SwipeLayout @JvmOverloads constructor(
          */
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
             val activeMenu = activeMenu ?: return
-            val contentView = contentView ?: return
             if (activeMenu == leftMenu) {
                 when {
                     xvel > velocity -> openActiveMenu()
                     xvel < -velocity -> closeActiveMenu()
-                    contentView.left - paddingLeft > activeMenu.width / 2 -> openActiveMenu()
+                    onScreen > 0.5f -> openActiveMenu()
                     else -> closeActiveMenu()
                 }
             } else {
                 when {
                     xvel < -velocity -> openActiveMenu()
                     xvel > velocity -> closeActiveMenu()
-                    contentView.left - paddingLeft < -activeMenu.width / 2 -> openActiveMenu()
+                    onScreen > 0.5f -> openActiveMenu()
                     else -> closeActiveMenu()
                 }
             }
@@ -493,8 +462,89 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     interface Listener {
-        fun onOpened(menuView: View)
 
-        fun onClosed(menuView: View)
+        fun onSwipe(menuView: View, swipeOffset: Float) {}
+
+        fun onSwipeStateChanged(menuView: View, newState: Int) {}
+
+        fun onMenuOpened(menuView: View) {}
+
+        fun onMenuClosed(menuView: View) {}
+    }
+
+    interface MenuDesigner {
+
+        fun onFirstLayout(parent: SwipeLayout, leftMenu: View?, rightMenu: View?)
+    }
+
+    class OverlayDesigner : MenuDesigner, Listener {
+
+        private lateinit var parent: SwipeLayout
+        private lateinit var rect: Rect
+
+        override fun onFirstLayout(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
+            this.parent = parent
+            rect = with(parent) {
+                Rect(
+                    paddingLeft,
+                    paddingTop,
+                    right - paddingRight,
+                    bottom - paddingBottom
+                )
+            }
+            parent.addListener(this)
+            leftMenu?.visibility = INVISIBLE
+            rightMenu?.visibility = INVISIBLE
+        }
+
+        override fun onSwipe(menuView: View, swipeOffset: Float) {
+            menuView.visibility = if (swipeOffset > 0f) VISIBLE else INVISIBLE
+        }
+    }
+
+    class ClassicDesigner : MenuDesigner, Listener {
+
+        private lateinit var parent: SwipeLayout
+        private lateinit var rect: Rect
+        private var lastSwipeOffset = 0f
+
+        override fun onFirstLayout(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
+            this.parent = parent
+            rect = with(parent) {
+                Rect(
+                    paddingLeft,
+                    paddingTop,
+                    right - paddingRight,
+                    bottom - paddingBottom
+                )
+            }
+            parent.addListener(this)
+            leftMenu?.visibility = View.INVISIBLE
+            leftMenu?.offsetLeftAndRight(-leftMenu.width)
+            rightMenu?.visibility = View.INVISIBLE
+            rightMenu?.offsetLeftAndRight(rightMenu.width)
+        }
+
+        override fun onSwipe(menuView: View, swipeOffset: Float) {
+            menuView.visibility = if (swipeOffset > 0f) VISIBLE else INVISIBLE
+            val width = menuView.width
+            val oldPos = (width * lastSwipeOffset).toInt()
+            val newPos = (width * swipeOffset).toInt()
+            val dx = newPos - oldPos
+            lastSwipeOffset = swipeOffset
+            if (isLeftMenu(menuView)) {
+                menuView.offsetLeftAndRight(dx)
+            } else {
+                menuView.offsetLeftAndRight(-dx)
+            }
+        }
+
+        private fun isLeftMenu(menuView: View): Boolean {
+            val absGravity = GravityCompat.getAbsoluteGravity(
+                (menuView.layoutParams as LayoutParams).gravity,
+                ViewCompat.getLayoutDirection(parent)
+            )
+            return absGravity and Gravity.LEFT == Gravity.LEFT
+        }
     }
 }
