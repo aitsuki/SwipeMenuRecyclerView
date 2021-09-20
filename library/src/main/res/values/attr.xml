@@ -8,6 +8,7 @@
             <enum name="right" value="1"/>
         </attr>
         <attr name="autoClose" format="boolean"/>
+        <attr name="designer" format="string"/>
     </declare-styleable>
 
     <declare-styleable name="SwipeMenuRecyclerView">

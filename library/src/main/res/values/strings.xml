@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">library</string>
+    <string name="classic_designer">com.aitsuki.swipe.SwipeLayout$ClassicDesigner</string>
+    <string name="overlay_designer">com.aitsuki.swipe.SwipeLayout$OverlayDesigner</string>
 </resources>

@@ -10,9 +10,13 @@ import android.widget.FrameLayout
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.customview.widget.ViewDragHelper
+import java.lang.reflect.Constructor
 import kotlin.math.abs
 
 private const val TAG = "SwipeLayout"
+
+private val designerConstructors =
+    ThreadLocal<MutableMap<String, Constructor<SwipeLayout.Designer>>>()
 
 /**
  * Created by AItsuki on 2017/2/23.
@@ -48,7 +52,7 @@ class SwipeLayout @JvmOverloads constructor(
     private val contentView: View? get() = getChildAt(childCount - 1)
     private var leftMenu: View? = null
     private var rightMenu: View? = null
-    private lateinit var menuDesigner: MenuDesigner
+    private val designer: Designer
 
     var swipeEnable = true
         set(value) {
@@ -58,13 +62,16 @@ class SwipeLayout @JvmOverloads constructor(
 
     init {
         isClickable = true
+        var designer: Designer? = null
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SwipeLayout)
             preview = a.getInt(R.styleable.SwipeLayout_preview, preview)
             autoClose = a.getBoolean(R.styleable.SwipeLayout_autoClose, autoClose)
+            designer =
+                Designer.parseDesigner(context, a.getString(R.styleable.SwipeLayout_designer))
             a.recycle()
         }
-        menuDesigner = OverlayDesigner()
+        this.designer = designer ?: ClassicDesigner()
     }
 
     fun closeMenu(animate: Boolean = true) {
@@ -141,7 +148,7 @@ class SwipeLayout @JvmOverloads constructor(
         super.onLayout(changed, left, top, right, bottom)
         if (firstLayout) {
             firstLayout = false
-            menuDesigner.onFirstLayout(this, leftMenu, rightMenu)
+            designer.onFirstLayout(this, leftMenu, rightMenu)
         }
 
         if (isInEditMode) {
@@ -472,12 +479,41 @@ class SwipeLayout @JvmOverloads constructor(
         fun onMenuClosed(menuView: View) {}
     }
 
-    interface MenuDesigner {
+    interface Designer {
 
         fun onFirstLayout(parent: SwipeLayout, leftMenu: View?, rightMenu: View?)
+
+        companion object {
+            fun parseDesigner(context: Context, name: String?): Designer? {
+                if (name.isNullOrEmpty()) return null
+
+                val fullName =
+                    if (name.startsWith(".")) context.packageName + name else name
+
+                try {
+                    var constructors = designerConstructors.get()
+                    if (constructors == null) {
+                        constructors = mutableMapOf()
+                    }
+                    var c = constructors[fullName]
+                    if (c == null) {
+                        @Suppress("UNCHECKED_CAST")
+                        val clazz = Class.forName(fullName, false, context.classLoader)
+                                as Class<Designer>
+                        c = clazz.getConstructor()
+                        c.isAccessible = true
+                        constructors[fullName] = c
+                        return c.newInstance()
+                    }
+                    return null
+                } catch (e: Exception) {
+                    throw RuntimeException("Could not inflate Designer subclass $fullName", e)
+                }
+            }
+        }
     }
 
-    class OverlayDesigner : MenuDesigner, Listener {
+    class OverlayDesigner : Designer, Listener {
 
         private lateinit var parent: SwipeLayout
         private lateinit var rect: Rect
@@ -502,7 +538,7 @@ class SwipeLayout @JvmOverloads constructor(
         }
     }
 
-    class ClassicDesigner : MenuDesigner, Listener {
+    class ClassicDesigner : Designer, Listener {
 
         private lateinit var parent: SwipeLayout
         private lateinit var rect: Rect
