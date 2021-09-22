@@ -9,7 +9,7 @@
     tools:context="com.aitsuki.swipedemo.MainActivity"
     tools:ignore="HardcodedText">
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.aitsuki.swipe.SwipeMenuRecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

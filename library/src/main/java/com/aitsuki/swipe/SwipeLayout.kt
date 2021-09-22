@@ -3,7 +3,6 @@ package com.aitsuki.swipe
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.*
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
@@ -11,14 +10,10 @@ import androidx.customview.widget.ViewDragHelper
 import java.lang.reflect.Constructor
 import kotlin.math.abs
 
-private const val TAG = "SwipeLayout"
-
-private val designerConstructors =
-    ThreadLocal<MutableMap<String, Constructor<SwipeLayout.Designer>>>()
-
 /**
- * Created by AItsuki on 2017/2/23.
+ * Created by Aitsuki on 2017/2/23.
  */
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class SwipeLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr) {
@@ -35,6 +30,9 @@ class SwipeLayout @JvmOverloads constructor(
         const val STATE_IDLE = ViewDragHelper.STATE_IDLE
         const val STATE_DRAGGING = ViewDragHelper.STATE_DRAGGING
         const val STATE_SETTLING = ViewDragHelper.STATE_SETTLING
+
+        private val designerConstructors =
+            ThreadLocal<MutableMap<String, Constructor<Designer>>>()
     }
 
     private val matchParentChildren = ArrayList<View>(1)
@@ -53,17 +51,9 @@ class SwipeLayout @JvmOverloads constructor(
     private val dragger = ViewDragHelper.create(this, ViewDragCallback())
 
     private var openState = 0
-        set(value) {
-            field = value
-            Log.d(TAG, "openState: $value")
-        }
     private var activeMenu: View? = null
-    private var onScreen = 0f
+    internal var onScreen = 0f
     private val listeners = arrayListOf<Listener>()
-    private val isOpenOrOpening
-        get() = openState and FLAG_IS_OPENED == FLAG_IS_OPENED
-                || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
-
     private var contentView: View? = null
     private var leftMenu: View? = null
     private var rightMenu: View? = null
@@ -228,7 +218,9 @@ class SwipeLayout @JvmOverloads constructor(
         val isRightDragging = dx > touchSlop && dx > abs(dy)
         val isLeftDragging = dx < -touchSlop && abs(dx) > abs(dy)
 
-        if (isOpenOrOpening) {
+        if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED
+            || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
+        ) {
             // 开启状态下，点击在content上直接捕获事件，点击在菜单上则判断touchSlop
             val initX = initialMotionX.toInt()
             val initY = initialMotionY.toInt()
