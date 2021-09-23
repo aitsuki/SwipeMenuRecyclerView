@@ -1,11 +1,12 @@
 package com.aitsuki.swipedemo
 
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.view.ViewGroup
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import com.aitsuki.swipe.SwipeLayout
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.aitsuki.swipedemo.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -14,26 +15,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.recyclerView.adapter = DemoAdapter()
 
-        binding.root.postDelayed({
-            val result = findSwipeLayout(binding.root)
-            Log.d("123123", result?.toString() ?: "not found")
-        }, 3000)
-    }
+        val navView: BottomNavigationView = binding.navView
 
-    private fun findSwipeLayout(view: View): SwipeLayout? {
-        if (view is SwipeLayout) {
-            return view
-        }
-
-        if (view is ViewGroup) {
-            for (i in 0 until view.childCount) {
-                return findSwipeLayout(view.getChildAt(i))
-            }
-        }
-        return null
+        val navController = findNavController(R.id.nav_host_fragment_activity_main)
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(R.id.navigation_home, R.id.navigation_dashboard)
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
     }
 }

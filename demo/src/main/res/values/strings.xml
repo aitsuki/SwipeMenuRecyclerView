@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SwipeMenuRecyclerView</string>
+    <string name="title_demo">Demo</string>
+    <string name="title_style">Style</string>
 </resources>

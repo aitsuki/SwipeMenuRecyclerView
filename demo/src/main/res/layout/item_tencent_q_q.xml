@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.aitsuki.swipe.SwipeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    app:autoClose="true"
+    app:designer="@string/classic_designer"
+    app:preview="none">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end">
+
+        <TextView
+            android:id="@+id/top"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@android:color/darker_gray"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:text="Top"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/mark_as_read"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@color/orange500"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:text="Read"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/delete"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@color/red500"
+            android:gravity="center"
+            android:paddingHorizontal="20dp"
+            android:text="Delete"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:gravity="center"
+        android:text="Tencent QQ"
+        android:textSize="18sp" />
+
+</com.aitsuki.swipe.SwipeLayout>

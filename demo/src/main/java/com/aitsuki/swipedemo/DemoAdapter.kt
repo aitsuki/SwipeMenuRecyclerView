@@ -1,34 +1,19 @@
 package com.aitsuki.swipedemo
 
-import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import com.aitsuki.swipedemo.databinding.ItemOverlayBinding
+import androidx.viewbinding.ViewBinding
 
-class DemoAdapter : RecyclerView.Adapter<DemoViewHolder>() {
+class DemoAdapter<T : ViewBinding>(private val item: BaseItem<T>) :
+    RecyclerView.Adapter<SimpleViewHolder<T>>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DemoViewHolder {
-        return DemoViewHolder(
-            ItemOverlayBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        )
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SimpleViewHolder<T> {
+        return SimpleViewHolder(item.onCreate(parent), item.bindFun)
     }
 
-    @SuppressLint("SetTextI18n")
-    override fun onBindViewHolder(holder: DemoViewHolder, position: Int) {
-        holder.binding.content.text = "Item $position"
-        holder.binding.content.setOnClickListener {
-            Toast.makeText(it.context, "Item $position", Toast.LENGTH_SHORT).show()
-        }
-        holder.binding.leftMenu.setOnClickListener {
-            holder.binding.root.closeMenu(false)
-            Toast.makeText(it.context, "LEFT $position", Toast.LENGTH_SHORT).show()
-        }
-        holder.binding.rightMenu.setOnClickListener {
-            holder.binding.root.closeMenu(false)
-            Toast.makeText(it.context, "RIGHT $position", Toast.LENGTH_SHORT).show()
-        }
+    override fun onBindViewHolder(holder: SimpleViewHolder<T>, position: Int) {
+        holder.bindFun(holder.binding, position)
     }
 
     override fun getItemCount(): Int {
@@ -36,4 +21,18 @@ class DemoAdapter : RecyclerView.Adapter<DemoViewHolder>() {
     }
 }
 
-class DemoViewHolder(val binding: ItemOverlayBinding) : RecyclerView.ViewHolder(binding.root)
+class SimpleViewHolder<T : ViewBinding>(
+    val binding: T,
+    val bindFun: (binding: T, position: Int) -> Unit
+) : RecyclerView.ViewHolder(binding.root)
+
+abstract class BaseItem<T : ViewBinding> {
+
+    fun onCreate(parent: ViewGroup): T {
+        return inflate(LayoutInflater.from(parent.context), parent)
+    }
+
+    abstract fun inflate(inflater: LayoutInflater, parent: ViewGroup): T
+
+    abstract val bindFun: (T, Int) -> Unit
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".StyleFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="?android:listDivider"
+        android:orientation="vertical"
+        android:showDividers="middle">
+
+        <include
+            android:id="@+id/item_classic"
+            layout="@layout/item_classic" />
+
+        <include
+            android:id="@+id/item_overlay"
+            layout="@layout/item_overlay" />
+
+        <include
+            android:id="@+id/item_long"
+            layout="@layout/item_long" />
+
+        <include
+            android:id="@+id/item_tencent_q_q"
+            layout="@layout/item_tencent_q_q" />
+
+
+    </LinearLayout>
+
+</ScrollView>

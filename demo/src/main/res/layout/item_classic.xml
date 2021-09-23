@@ -4,11 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="80dp"
     app:autoClose="true"
+    app:designer="@string/classic_designer"
     app:preview="none">
 
     <TextView
         android:id="@+id/left_menu"
-        android:layout_width="80dp"
+        android:layout_width="100dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="@color/red500"
@@ -18,7 +19,7 @@
 
     <TextView
         android:id="@+id/right_menu"
-        android:layout_width="80dp"
+        android:layout_width="100dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
         android:background="@color/blue500"
@@ -30,9 +31,9 @@
         android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
         android:gravity="center"
-        android:text="Classic Style"
+        android:text="Classic"
+        android:background="@color/white"
         android:textSize="18sp" />
 
 </com.aitsuki.swipe.SwipeLayout>
