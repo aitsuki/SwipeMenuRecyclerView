@@ -43,8 +43,8 @@ class SwipeLayout @JvmOverloads constructor(
     private val velocity = ViewConfiguration.get(context).scaledMinimumFlingVelocity
 
     private var isDragging = false
-    private var initialMotionX = 0f
-    private var initialMotionY = 0f
+    private var downX = 0
+    private var downY = 0
     private var alwaysInTapRegion = false
 
     private val dragger = ViewDragHelper.create(this, ViewDragCallback())
@@ -207,26 +207,20 @@ class SwipeLayout @JvmOverloads constructor(
     private fun checkCanDrag(ev: MotionEvent) {
         if (isDragging) return
 
-        val dx = ev.x - initialMotionX
-        val dy = ev.y - initialMotionY
+        val dx = ev.x.toInt() - downX
+        val dy = ev.y.toInt() - downY
         val isRightDragging = dx > touchSlop && dx > abs(dy)
         val isLeftDragging = dx < -touchSlop && abs(dx) > abs(dy)
 
         if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED
             || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
         ) {
-            // 开启状态下，点击在content上直接捕获事件，点击在菜单上则判断touchSlop
-            val initX = initialMotionX.toInt()
-            val initY = initialMotionY.toInt()
-            if (isTouchContent(initX, initY)) {
+            if (isTouchContent(downX, downY)) {
                 isDragging = true
-                alwaysInTapRegion = true
-            } else if (isTouchMenu(initX, initY)) {
-                isDragging = (activeMenu == leftMenu && isLeftDragging)
-                        || (activeMenu == rightMenu && isRightDragging)
+            } else if (isTouchMenu(downX, downY)) {
+                isDragging = isLeftDragging || isRightDragging
             }
         } else {
-            // 关闭状态，获取当前即将要开启的菜单。
             if (isRightDragging) {
                 activeMenu = leftMenu
                 isDragging = activeMenu != null
@@ -237,18 +231,56 @@ class SwipeLayout @JvmOverloads constructor(
         }
 
         if (isDragging) {
-            // 开始拖动后，分发down事件给DragHelper
             val downEvent = MotionEvent.obtain(ev).also { it.action = MotionEvent.ACTION_DOWN }
             dragger.processTouchEvent(downEvent)
         }
     }
 
-    /**
-     * 类似于GestureDetector的SingleTap，用于关闭菜单。
-     */
+    private fun processTouchEvent(ev: MotionEvent) {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downX = ev.x.toInt()
+                downY = ev.y.toInt()
+                if (autoClose || isTouchContent(downX, downY)) {
+                    alwaysInTapRegion = true
+                }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                val beforeCheckDrag = isDragging
+                checkCanDrag(ev)
+                if (isDragging) {
+                    dragger.processTouchEvent(ev)
+                }
+                // If begging drag, send a cancel event to cancel click effect.
+                if (!beforeCheckDrag && isDragging) {
+                    requestDisallowInterceptTouchEvent(true)
+                    val cancelEvent = MotionEvent.obtain(ev)
+                        .also { it.action = MotionEvent.ACTION_CANCEL }
+                    super.onTouchEvent(cancelEvent)
+                }
+                detectAlwaysInTapRegion(ev)
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (isDragging) {
+                    dragger.processTouchEvent(ev)
+                    isDragging = false
+                    requestDisallowInterceptTouchEvent(false)
+                }
+                if (alwaysInTapRegion) {
+                    closeActiveMenu()
+                }
+            }
+            else -> {
+                if (isDragging) {
+                    dragger.processTouchEvent(ev)
+                }
+            }
+        }
+    }
+
     private fun detectAlwaysInTapRegion(ev: MotionEvent) {
-        val dx = (ev.x - initialMotionX).toInt()
-        val dy = (ev.y - initialMotionY).toInt()
+        val dx = (ev.x - downX).toInt()
+        val dy = (ev.y - downY).toInt()
         val distance = (dx * dx) + (dy * dy)
         if (distance > touchSlop * touchSlop) {
             alwaysInTapRegion = false
@@ -257,83 +289,13 @@ class SwipeLayout @JvmOverloads constructor(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                isDragging = false
-                initialMotionX = ev.x
-                initialMotionY = ev.y
-            }
-            MotionEvent.ACTION_MOVE -> {
-                val beforeCheckDrag = isDragging
-                checkCanDrag(ev)
-                if (isDragging) {
-                    dragger.processTouchEvent(ev)
-                }
-                // 开始拖动后，发送一个cancel事件用来取消点击效果
-                if (!beforeCheckDrag && isDragging) {
-                    val cancelEvent = MotionEvent.obtain(ev)
-                        .also { it.action = MotionEvent.ACTION_CANCEL }
-                    super.onTouchEvent(cancelEvent)
-                }
-                // 菜单打开的状态下触摸content，检测是否是Tap事件，用于判断是否需要关闭菜单
-                detectAlwaysInTapRegion(ev)
-            }
-            MotionEvent.ACTION_UP -> {
-                if (isDragging) {
-                    // 拖拽后手指抬起时不应该响应到点击事件
-                    dragger.processTouchEvent(ev)
-                    ev.action = MotionEvent.ACTION_CANCEL
-                    isDragging = false
-                }
-                if (alwaysInTapRegion) {
-                    closeActiveMenu()
-                }
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                dragger.processTouchEvent(ev)
-                isDragging = false
-            }
-            else -> {
-                if (isDragging) {
-                    dragger.processTouchEvent(ev)
-                }
-            }
-        }
-        return isDragging || super.onTouchEvent(ev)
+        processTouchEvent(ev)
+        return true
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                isDragging = false
-                initialMotionX = ev.x
-                initialMotionY = ev.y
-                if (autoClose && isTouchMenu(ev.x.toInt(), ev.y.toInt())) {
-                    alwaysInTapRegion = true
-                }
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (autoClose && isTouchMenu(ev.x.toInt(), ev.y.toInt())) {
-                    detectAlwaysInTapRegion(ev)
-                }
-                checkCanDrag(ev)
-            }
-            MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
-                if (isDragging) {
-                    dragger.processTouchEvent(ev)
-                    isDragging = false
-                }
-                if (autoClose && alwaysInTapRegion) {
-                    closeActiveMenu()
-                }
-            }
-            else -> {
-                if (isDragging) {
-                    dragger.processTouchEvent(ev)
-                }
-            }
-        }
-        return isDragging || super.onInterceptTouchEvent(ev)
+        processTouchEvent(ev)
+        return isDragging
     }
 
     private fun setContentViewOffset() {
@@ -364,9 +326,6 @@ class SwipeLayout @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Content和Menu均可以捕获，但是只有Content会移动。
-     */
     private inner class ViewDragCallback : ViewDragHelper.Callback() {
 
         override fun tryCaptureView(child: View, pointerId: Int): Boolean {
@@ -408,9 +367,6 @@ class SwipeLayout @JvmOverloads constructor(
             return child.top
         }
 
-        /**
-         * 根据情况开启或关闭菜单
-         */
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
             val activeMenu = activeMenu ?: return
             if (activeMenu == leftMenu) {
@@ -673,13 +629,6 @@ class SwipeLayout @JvmOverloads constructor(
 
         fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?)
 
-        /**
-         * @param menuView activeMenu
-         * @param left visible left
-         * @param top visible top
-         * @param right visible right
-         * @param bottom visible bottom
-         */
         fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int)
 
         companion object {
@@ -712,35 +661,6 @@ class SwipeLayout @JvmOverloads constructor(
         }
     }
 
-    class OverlayDesigner : Designer {
-
-        private var leftMenu: View? = null
-
-        override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
-            this.leftMenu = leftMenu
-            leftMenu?.visibility = INVISIBLE
-            rightMenu?.visibility = INVISIBLE
-        }
-
-        override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {
-            val width = right - left
-            menuView.visibility = if (width > 0) VISIBLE else INVISIBLE
-            if (menuView == leftMenu) {
-                if (width == 0) {
-                    menuView.layout(left - menuView.width, menuView.top, left, menuView.bottom)
-                } else {
-                    menuView.layout(left, menuView.top, left + menuView.width, menuView.bottom)
-                }
-            } else {
-                if (width == 0) {
-                    menuView.layout(right, menuView.top, right + menuView.width, menuView.bottom)
-                } else {
-                    menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
-                }
-            }
-        }
-    }
-
     class ClassicDesigner : Designer {
 
         private var leftMenu: View? = null
@@ -757,6 +677,37 @@ class SwipeLayout @JvmOverloads constructor(
                 menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
             } else {
                 menuView.layout(left, menuView.top, left + menuView.width, menuView.bottom)
+            }
+        }
+    }
+
+    class OverlayDesigner : Designer {
+
+        private var leftMenu: View? = null
+
+        override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
+            this.leftMenu = leftMenu
+            leftMenu?.visibility = View.INVISIBLE
+            rightMenu?.visibility = View.INVISIBLE
+        }
+
+        override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {
+            val width = right - left
+            menuView.visibility = if (width > 0) VISIBLE else INVISIBLE
+            if (menuView == leftMenu) {
+                if (width == 0) {
+                    // If menu is INVISIBLE, move it to outside. See isTouchMenu.
+                    menuView.layout(left - menuView.width, menuView.top, left, menuView.bottom)
+                } else {
+                    menuView.layout(left, menuView.top, left + menuView.width, menuView.bottom)
+                }
+            } else {
+                if (width == 0) {
+                    // If menu is INVISIBLE, move it to outside. See isTouchMenu.
+                    menuView.layout(right, menuView.top, right + menuView.width, menuView.bottom)
+                } else {
+                    menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
+                }
             }
         }
     }
