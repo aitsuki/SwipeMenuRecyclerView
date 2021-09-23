@@ -13,7 +13,6 @@ import kotlin.math.abs
 /**
  * Created by Aitsuki on 2017/2/23.
  */
-@Suppress("unused", "MemberVisibilityCanBePrivate")
 class SwipeLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr) {
@@ -68,7 +67,6 @@ class SwipeLayout @JvmOverloads constructor(
         }
 
     init {
-        isClickable = true
         var designer: Designer? = null
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SwipeLayout)
@@ -126,9 +124,7 @@ class SwipeLayout @JvmOverloads constructor(
                 openState = 0
             }
             animate -> {
-                if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED) {
-                    openState = openState or FLAG_IS_CLOSING
-                }
+                openState = openState or FLAG_IS_CLOSING
                 dragger.smoothSlideViewTo(contentView, paddingLeft, contentView.top)
             }
             else -> {
@@ -155,9 +151,7 @@ class SwipeLayout @JvmOverloads constructor(
                 openState = FLAG_IS_OPENED
             }
             animate -> {
-                if (openState == 0) {
-                    openState = openState or FLAG_IS_OPENING
-                }
+                openState = openState or FLAG_IS_OPENING
                 dragger.smoothSlideViewTo(contentView, left, contentView.top)
             }
             else -> {
@@ -246,8 +240,6 @@ class SwipeLayout @JvmOverloads constructor(
             // 开始拖动后，分发down事件给DragHelper
             val downEvent = MotionEvent.obtain(ev).also { it.action = MotionEvent.ACTION_DOWN }
             dragger.processTouchEvent(downEvent)
-            // 解决和父控件的滑动冲突。
-            parent?.requestDisallowInterceptTouchEvent(true)
         }
     }
 
@@ -499,12 +491,15 @@ class SwipeLayout @JvmOverloads constructor(
                 rightMenu = child
             }
 
+            if (!initDesigner) {
+                designer.onInit(this, leftMenu, rightMenu)
+                initDesigner = true
+            }
+
             if (child.visibility != GONE) {
-                measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)
-                childWidth = childWidth
-                    .coerceAtLeast(child.measuredWidth + lp.leftMargin + lp.rightMargin)
-                childHeight = childHeight
-                    .coerceAtLeast(child.measuredHeight + lp.topMargin + lp.bottomMargin)
+                measureChild(child, widthMeasureSpec, heightMeasureSpec)
+                childWidth = childWidth.coerceAtLeast(child.measuredWidth)
+                childHeight = childHeight.coerceAtLeast(child.measuredHeight)
                 childState = combineMeasuredStates(childState, child.measuredState)
                 if (measureMatchParentChildren) {
                     if (lp.width == ViewGroup.LayoutParams.MATCH_PARENT
@@ -531,37 +526,24 @@ class SwipeLayout @JvmOverloads constructor(
         if (count > 1) {
             for (i in 0 until count) {
                 val child = matchParentChildren[i]
-                val lp = child.layoutParams as MarginLayoutParams
+                val lp = child.layoutParams
 
                 val childWidthMeasureSpec: Int =
                     if (lp.width == ViewGroup.LayoutParams.MATCH_PARENT) {
-                        val width = 0.coerceAtLeast(
-                            measuredWidth - paddingLeft - paddingRight
-                                    - lp.leftMargin - lp.rightMargin
-                        )
+                        val width = 0.coerceAtLeast(measuredWidth - paddingLeft - paddingRight)
                         MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
                     } else {
-                        getChildMeasureSpec(
-                            widthMeasureSpec,
-                            paddingLeft + paddingRight + lp.leftMargin + lp.rightMargin,
-                            lp.width
-                        )
+                        getChildMeasureSpec(widthMeasureSpec, paddingLeft + paddingRight, lp.width)
                     }
 
                 val childHeightMeasureSpec: Int =
                     if (lp.height == ViewGroup.LayoutParams.MATCH_PARENT) {
-                        val height = 0.coerceAtLeast(
-                            measuredHeight - paddingTop - paddingBottom
-                                    - lp.topMargin - lp.bottomMargin
-                        )
-                        MeasureSpec.makeMeasureSpec(
-                            height, MeasureSpec.EXACTLY
-                        )
+                        val height = 0.coerceAtLeast(measuredHeight - paddingTop - paddingBottom)
+                        MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
                     } else {
                         getChildMeasureSpec(
                             heightMeasureSpec,
-                            paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin,
-                            lp.height
+                            paddingTop + paddingBottom, lp.height
                         )
                     }
                 child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
@@ -570,33 +552,6 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        layoutChildren(left, top, right, bottom)
-
-        if (!initDesigner) {
-            designer.onInit(this, leftMenu, rightMenu)
-            initDesigner = true
-        }
-
-        if (contentView != null && activeMenu != null) {
-            val contentView = contentView!!
-            val activeMenu = activeMenu!!
-            val dx = (activeMenu.width * onScreen).toInt()
-            ViewCompat.offsetLeftAndRight(contentView, if (activeMenu == leftMenu) dx else -dx)
-
-            val parentLeft = paddingLeft
-            val parentRight = right - left - paddingRight
-            val parentTop = paddingTop
-            val parentBottom = bottom - top - paddingBottom
-
-            if (activeMenu == leftMenu) {
-                designer.onLayout(activeMenu, parentLeft, parentTop, contentView.left, parentBottom)
-            } else {
-                designer.onLayout(
-                    activeMenu, contentView.right, parentTop, parentRight, parentBottom
-                )
-            }
-        }
-
         if (isInEditMode) {
             if (preview == PREVIEW_LEFT) {
                 openLeftMenu(false)
@@ -604,21 +559,17 @@ class SwipeLayout @JvmOverloads constructor(
                 openRightMenu(false)
             }
         }
-        firstLayout = false
-    }
-
-    private fun layoutChildren(left: Int, top: Int, right: Int, bottom: Int) {
         val parentLeft = paddingLeft
-        val parentRight = right - left - paddingRight
+        val parentRight = right - paddingRight
         val parentTop = paddingTop
-        val parentBottom = bottom - top - paddingBottom
+        val parentBottom = bottom - paddingBottom
 
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             if (child.visibility == GONE) continue
 
-            val width = child.measuredWidth
-            val height = child.measuredHeight
+            val childWidth = child.measuredWidth
+            val childHeight = child.measuredHeight
 
             val lp = child.layoutParams as LayoutParams
             val layoutDirection = ViewCompat.getLayoutDirection(this)
@@ -626,20 +577,38 @@ class SwipeLayout @JvmOverloads constructor(
             val verticalGravity = lp.gravity and Gravity.VERTICAL_GRAVITY_MASK
 
             val childLeft: Int = when (absoluteGravity and Gravity.HORIZONTAL_GRAVITY_MASK) {
-                Gravity.RIGHT -> parentRight - width - lp.rightMargin
-                else -> parentLeft + lp.leftMargin
+                // layout child out of content
+                Gravity.LEFT -> parentLeft - childWidth
+                Gravity.RIGHT -> parentRight + childWidth
+                else -> parentLeft
             }
 
             val childTop = when (verticalGravity) {
-                Gravity.TOP -> parentTop + lp.topMargin
-                Gravity.CENTER_VERTICAL ->
-                    parentTop + (parentBottom - parentTop - height) / 2 +
-                            lp.topMargin - lp.bottomMargin
-                Gravity.BOTTOM -> parentBottom - height - lp.bottomMargin
-                else -> parentTop + lp.topMargin
+                Gravity.TOP -> parentTop
+                Gravity.CENTER_VERTICAL -> parentTop + (parentBottom - parentTop - childHeight) / 2
+                Gravity.BOTTOM -> parentBottom - childHeight
+                else -> parentTop
             }
-            child.layout(childLeft, childTop, childLeft + width, childTop + height)
+            child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
         }
+
+        val contentView = contentView
+        if (contentView != null) {
+            val activeMenu = activeMenu
+            if (activeMenu != null) {
+                val dx = (activeMenu.width * onScreen).toInt()
+                ViewCompat.offsetLeftAndRight(contentView, if (activeMenu == leftMenu) dx else -dx)
+            }
+
+            leftMenu?.let {
+                designer.onLayout(it, parentLeft, parentTop, contentView.left, parentBottom)
+            }
+
+            rightMenu?.let {
+                designer.onLayout(it, contentView.right, parentTop, parentRight, parentBottom)
+            }
+        }
+        firstLayout = false
     }
 
     override fun generateDefaultLayoutParams(): ViewGroup.LayoutParams {
@@ -650,10 +619,10 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     override fun generateLayoutParams(p: ViewGroup.LayoutParams): ViewGroup.LayoutParams {
-        return when (p) {
-            is LayoutParams -> LayoutParams(p)
-            is MarginLayoutParams -> LayoutParams(p)
-            else -> LayoutParams(p)
+        return if (p is LayoutParams) {
+            LayoutParams(p)
+        } else {
+            LayoutParams(p)
         }
     }
 
@@ -665,7 +634,7 @@ class SwipeLayout @JvmOverloads constructor(
         return LayoutParams(context, attrs)
     }
 
-    class LayoutParams : MarginLayoutParams {
+    class LayoutParams : ViewGroup.LayoutParams {
 
         var gravity = Gravity.NO_GRAVITY
 
@@ -686,8 +655,6 @@ class SwipeLayout @JvmOverloads constructor(
         }
 
         constructor(source: ViewGroup.LayoutParams) : super(source)
-
-        constructor(source: MarginLayoutParams) : super(source)
     }
 
     interface Listener {
@@ -747,16 +714,30 @@ class SwipeLayout @JvmOverloads constructor(
 
     class OverlayDesigner : Designer {
 
-        private lateinit var parent: SwipeLayout
+        private var leftMenu: View? = null
 
         override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
-            this.parent = parent
+            this.leftMenu = leftMenu
             leftMenu?.visibility = INVISIBLE
             rightMenu?.visibility = INVISIBLE
         }
 
         override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {
-            menuView.visibility = if (right - left > 0) VISIBLE else INVISIBLE
+            val width = right - left
+            menuView.visibility = if (width > 0) VISIBLE else INVISIBLE
+            if (menuView == leftMenu) {
+                if (width == 0) {
+                    menuView.layout(left - menuView.width, menuView.top, left, menuView.bottom)
+                } else {
+                    menuView.layout(left, menuView.top, left + menuView.width, menuView.bottom)
+                }
+            } else {
+                if (width == 0) {
+                    menuView.layout(right, menuView.top, right + menuView.width, menuView.bottom)
+                } else {
+                    menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
+                }
+            }
         }
     }
 
