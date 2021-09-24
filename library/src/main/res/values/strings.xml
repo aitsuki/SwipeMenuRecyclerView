@@ -1,4 +1,5 @@
 <resources>
     <string name="classic_designer">com.aitsuki.swipe.SwipeLayout$ClassicDesigner</string>
     <string name="overlay_designer">com.aitsuki.swipe.SwipeLayout$OverlayDesigner</string>
+    <string name="parallax_designer">com.aitsuki.swipe.SwipeLayout$ParallaxDesigner</string>
 </resources>

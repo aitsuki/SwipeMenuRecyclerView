@@ -43,6 +43,10 @@ class DemoFragment : Fragment() {
             changeStyle(OverlayItem())
         }
 
+        styleBinding.itemParallax.content.setOnClickListener {
+            changeStyle(ParallaxItem())
+        }
+
         styleBinding.itemLong.content.setOnClickListener {
             changeStyle(LongItem())
         }

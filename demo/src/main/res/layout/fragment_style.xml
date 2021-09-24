@@ -22,6 +22,10 @@
             layout="@layout/item_overlay" />
 
         <include
+            android:id="@+id/item_parallax"
+            layout="@layout/item_parallax"/>
+
+        <include
             android:id="@+id/item_long"
             layout="@layout/item_long" />
 

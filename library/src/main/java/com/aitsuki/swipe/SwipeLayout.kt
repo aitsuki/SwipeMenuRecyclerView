@@ -3,6 +3,8 @@ package com.aitsuki.swipe
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
+import android.util.SparseIntArray
 import android.view.*
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
@@ -708,6 +710,81 @@ class SwipeLayout @JvmOverloads constructor(
                 } else {
                     menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
                 }
+            }
+        }
+    }
+
+    class ParallaxDesigner : Designer {
+
+        private var leftMenu: View? = null
+
+        override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
+            this.leftMenu = leftMenu
+            leftMenu?.visibility = View.INVISIBLE
+            rightMenu?.visibility = View.INVISIBLE
+        }
+
+        override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {
+            val width = right - left
+            menuView.visibility = if (width > 0) VISIBLE else INVISIBLE
+            if (menuView == leftMenu) {
+                if (width == 0) {
+                    // If menu is INVISIBLE, move it to outside. See isTouchMenu.
+                    menuView.layout(left - menuView.width, menuView.top, left, menuView.bottom)
+                } else {
+                    menuView.layout(left, menuView.top, left + menuView.width, menuView.bottom)
+                    if (menuView is ViewGroup && menuView.childCount > 1) {
+                        layoutLeftMenu(menuView, left, right)
+                    }
+                }
+            } else {
+                if (width == 0) {
+                    // If menu is INVISIBLE, move it to outside. See isTouchMenu.
+                    menuView.layout(right, menuView.top, right + menuView.width, menuView.bottom)
+                } else {
+                    menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
+                    if (menuView is ViewGroup && menuView.childCount > 0) {
+                        layoutRightMenu(menuView, left, right)
+                    }
+                }
+            }
+        }
+
+        private fun layoutLeftMenu(menuView: ViewGroup, left: Int, right: Int) {
+            val onScreen = (right - left).toFloat() / menuView.width
+            var child = menuView.getChildAt(menuView.childCount - 1)
+            var childLeft = (right - child.width * onScreen).toInt()
+            child.layout(childLeft, child.top, childLeft + child.width, child.bottom)
+            var prevChild = child
+            for (i in menuView.childCount - 2 downTo 0) {
+                child = menuView.getChildAt(i)
+                childLeft = (prevChild.left - child.width * onScreen).toInt()
+                child.layout(
+                    childLeft,
+                    child.top,
+                    childLeft + child.width,
+                    child.bottom
+                )
+                prevChild = child
+            }
+        }
+
+        private fun layoutRightMenu(menuView: ViewGroup, left: Int, right: Int) {
+            val onScreen = (right - left).toFloat() / menuView.width
+            var child = menuView.getChildAt(menuView.childCount - 1)
+            var childLeft = menuView.width - (child.width * onScreen).toInt()
+            child.layout(childLeft, child.top, childLeft + child.width, child.bottom)
+            var prevChild = child
+            for (i in menuView.childCount - 2 downTo 0) {
+                child = menuView.getChildAt(i)
+                childLeft = (prevChild.left - child.width * onScreen).toInt()
+                child.layout(
+                    childLeft,
+                    child.top,
+                    childLeft + child.width,
+                    child.bottom
+                )
+                prevChild = child
             }
         }
     }
