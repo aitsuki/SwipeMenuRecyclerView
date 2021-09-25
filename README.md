@@ -18,7 +18,9 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
 
 ## 声明依赖项
 
-Step 1.Add the JitPack repository to your build file
+1.添加 JitPack 仓库
+
+在项目根目录的 build.gradle 中新增
 
 ```groovy
 allprojects {
@@ -29,7 +31,19 @@ allprojects {
 }
 ```
 
-Step 2.Add the dependency
+如果你的项目是使用新的AndroidStudio Arctic Fox 创建的，配置仓库的可能 settings.gradle
+
+```groovy
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+2.添加依赖
 
 ```groovy
 dependencies {
