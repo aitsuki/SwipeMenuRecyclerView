@@ -2,6 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 apply plugin: 'kotlin-android'
 
+group='com.github.aitsuki'
+
 android {
     compileSdkVersion 31
 
@@ -27,7 +29,4 @@ android {
 dependencies {
     compileOnly "androidx.recyclerview:recyclerview:$recyclerview_version"
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-}
-repositories {
-    mavenCentral()
 }
