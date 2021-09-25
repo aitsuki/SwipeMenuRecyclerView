@@ -10,13 +10,11 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
 
 ## 内容列表
 
-- [SwipeMenuRecyclerView](#swipemenurecyclerview)
-  - [内容列表](#内容列表)
-  - [声明依赖项](#声明依赖项)
-  - [使用方式](#使用方式)
-    - [SwipeLayout 的自定义属性](#swipelayout-的自定义属性)
-    - [监听菜单事件](#监听菜单事件)
-  - [使用 Designer 自定义菜单样式](#使用-designer-自定义菜单样式)
+- [声明依赖项](#声明依赖项)
+- [使用方式](#使用方式)
+  - [SwipeLayout 的自定义属性](#swipelayout-的自定义属性)
+  - [监听菜单事件](#监听菜单事件)
+- [使用 Designer 自定义菜单样式](#使用-designer-自定义菜单样式)
 
 ## 声明依赖项
 
