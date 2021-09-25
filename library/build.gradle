@@ -4,6 +4,12 @@ apply plugin: 'kotlin-android'
 
 group='com.github.aitsuki'
 
+repositories {
+    mavenCentral()
+    google()
+    maven { url "https://jitpack.io" }
+}
+
 android {
     compileSdkVersion 31
 
@@ -29,4 +35,18 @@ android {
 dependencies {
     compileOnly "androidx.recyclerview:recyclerview:$recyclerview_version"
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.aitsuki'
+                artifactId = 'SwipeMenuRecyclerView'
+                version = '2.0.0'
+            }
+        }
+    }
 }
