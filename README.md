@@ -31,7 +31,7 @@ allprojects {
 }
 ```
 
-如果你的项目是使用新的AndroidStudio Arctic Fox 创建的，配置仓库的可能 settings.gradle
+如果你的项目是使用新的AndroidStudio Arctic Fox 创建的，配置仓库的位置可能在 settings.gradle
 
 ```groovy
 dependencyResolutionManagement {
