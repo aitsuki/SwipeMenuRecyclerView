@@ -1,5 +1,7 @@
 # SwipeMenuRecyclerView
 
+中文 | [English](README.en.md)
+
 SwipeMenuRecyclerView 是一个轻量级的侧滑菜单库，可以在列表中使用，也可以单独使用。
 
 - 支持多种样式的菜单（Classic, Overlay, Parallax），并可以轻松的自定义新的样式
