@@ -15,6 +15,8 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
   - [Declared attributes for SwipeLayout](#declared-attributes-for-swipelayout)
   - [Listener for SwipeLayout](#listener-for-swipelayout)
 - [Designer](#designer)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Declaring dependencies
 
@@ -161,3 +163,11 @@ class ClassicDesigner : Designer {
 Among them, the `left, top, right, bottom` of the `onLayout` method represent the visible area of the current menu, which can be understood as `VisibleRect`.
 
 ![IMG_0074](https://user-images.githubusercontent.com/14817735/134761136-c8dfea17-d7e1-4618-8ec3-7b8b60831c0e.PNG)
+
+## Contributing
+
+Feel free to dive in! [Open an issue](https://github.com/aitsuki/SwipeMenuRecyclerView/issues/new) or submit PRs.
+
+## License
+
+[MIT](LICENSE) © Aitsuki

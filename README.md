@@ -17,6 +17,8 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
   - [SwipeLayout 的自定义属性](#swipelayout-的自定义属性)
   - [监听菜单事件](#监听菜单事件)
 - [使用 Designer 自定义菜单样式](#使用-designer-自定义菜单样式)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## 声明依赖项
 
@@ -164,3 +166,11 @@ class ClassicDesigner : Designer {
 其中 `onLayout` 方法的 `left, top, right, bottom` 表示当前菜单的可观测区域，你可以将其理解为 `VisibleRect`。
 
 ![IMG_0074](https://user-images.githubusercontent.com/14817735/134761136-c8dfea17-d7e1-4618-8ec3-7b8b60831c0e.PNG)
+
+## Contributing
+
+非常欢迎！请[打开一个讨论](https://github.com/aitsuki/SwipeMenuRecyclerView/issues/new) 或者提交 PRs
+
+## License
+
+[MIT](LICENSE) © Aitsuki
