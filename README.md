@@ -99,7 +99,7 @@ dependencies {
 
 - `designer="@string/classic_designer|overlay...|parallax..."`: default `classic`  
   设置菜单的样式，设置方式类似于 [CoordinateLayout](https://developer.android.com/reference/androidx/coordinatorlayout/widget/CoordinatorLayout) 的 `Behavior`。  
-  更多介绍请查看 [Designer 自定义菜单样式](#designer-自定义菜单样式)
+  更多介绍请查看 [Designer 自定义菜单样式](#使用-designer-自定义菜单样式)
 
 ### 监听菜单事件
 
