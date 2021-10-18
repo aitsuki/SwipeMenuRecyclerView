@@ -314,12 +314,12 @@ class SwipeLayout @JvmOverloads constructor(
                 bottom - paddingBottom
             )
         } else {
-            offset = (right - paddingRight - contentView.right).toFloat() / activeMenu.width
+            offset = (right - left - paddingRight - contentView.right).toFloat() / activeMenu.width
             designer.onLayout(
                 activeMenu,
                 contentView.right,
                 paddingTop,
-                right - paddingRight,
+                right - left - paddingRight,
                 bottom - paddingBottom
             )
         }
@@ -518,9 +518,9 @@ class SwipeLayout @JvmOverloads constructor(
             }
         }
         val parentLeft = paddingLeft
-        val parentRight = right - paddingRight
+        val parentRight = right - left - paddingRight
         val parentTop = paddingTop
-        val parentBottom = bottom - paddingBottom
+        val parentBottom = bottom - top - paddingBottom
 
         for (i in 0 until childCount) {
             val child = getChildAt(i)

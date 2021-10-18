@@ -35,26 +35,35 @@ class DemoFragment : Fragment() {
             behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
-        styleBinding.itemClassic.content.setOnClickListener {
-            changeStyle(ClassicItem())
-        }
+        styleBinding.apply {
+            itemClassic.content.setOnClickListener {
+                changeStyle(ClassicItem())
+            }
 
-        styleBinding.itemOverlay.content.setOnClickListener {
-            changeStyle(OverlayItem())
-        }
+            itemOverlay.content.setOnClickListener {
+                changeStyle(OverlayItem())
+            }
 
-        styleBinding.itemParallax.content.setOnClickListener {
-            changeStyle(ParallaxItem())
-        }
+            itemParallax.content.setOnClickListener {
+                changeStyle(ParallaxItem())
+            }
 
-        styleBinding.itemLong.content.setOnClickListener {
-            changeStyle(LongItem())
-        }
+            itemLong.content.setOnClickListener {
+                changeStyle(LongItem())
+            }
 
-        styleBinding.itemTencentQQ.content.setOnClickListener {
-            changeStyle(QQItem())
-        }
+            itemTencentQQ.content.setOnClickListener {
+                changeStyle(QQItem())
+            }
 
+            itemWithMargin.content.setOnClickListener {
+                changeStyle(WithMarginItem())
+            }
+
+            itemWithPadding.content.setOnClickListener {
+                changeStyle(WithPaddingItem())
+            }
+        }
         changeStyle(ClassicItem())
         return binding.root
     }

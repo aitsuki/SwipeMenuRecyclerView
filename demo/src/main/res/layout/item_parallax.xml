@@ -5,7 +5,7 @@
     android:layout_height="80dp"
     app:autoClose="true"
     app:designer="@string/parallax_designer"
-    app:preview="right">
+    app:preview="none">
 
     <LinearLayout
         android:layout_width="wrap_content"
