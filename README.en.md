@@ -11,6 +11,7 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
 ## Table of Contents
 
 - [Declaring dependencies](#declaring-dependencies)
+- [PorGuard](#proguard)
 - [Usage](#usage)
   - [Declared attributes for SwipeLayout](#declared-attributes-for-swipelayout)
   - [Listener for SwipeLayout](#listener-for-swipelayout)
@@ -51,6 +52,14 @@ dependencyResolutionManagement {
 dependencies {
     implementation 'com.github.aitsuki:SwipeMenuRecyclerView:2.0.1'
 }
+```
+
+## ProGuard
+
+Depending on your ProGuard config and usage, you may to include the following lines in your proguard configuration file.
+
+```groovy
+-keep class * implements com.aitsuki.swipe.SwipeLayout$Designer
 ```
 
 ## Usage

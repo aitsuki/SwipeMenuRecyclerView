@@ -16,6 +16,7 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion 31
+        consumerProguardFiles 'proguard-rules.pro'
     }
     buildTypes {
         release {

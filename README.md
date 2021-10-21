@@ -13,6 +13,7 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
 ## 内容列表
 
 - [声明依赖项](#声明依赖项)
+- [混淆](#混淆)
 - [使用方式](#使用方式)
   - [SwipeLayout 的自定义属性](#swipelayout-的自定义属性)
   - [监听菜单事件](#监听菜单事件)
@@ -53,6 +54,14 @@ dependencyResolutionManagement {
 dependencies {
     implementation 'com.github.aitsuki:SwipeMenuRecyclerView:2.0.1'
 }
+```
+
+## 混淆
+
+如果你启用了混淆，可能需要添加以下规则：
+
+```groovy
+-keep class * implements com.aitsuki.swipe.SwipeLayout$Designer
 ```
 
 ## 使用方式
