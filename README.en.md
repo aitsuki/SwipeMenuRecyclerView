@@ -11,7 +11,7 @@ https://user-images.githubusercontent.com/14817735/134755455-47c0fbc3-54b0-4899-
 ## Table of Contents
 
 - [Declaring dependencies](#declaring-dependencies)
-- [PorGuard](#proguard)
+- [ProGuard](#proguard)
 - [Usage](#usage)
   - [Declared attributes for SwipeLayout](#declared-attributes-for-swipelayout)
   - [Listener for SwipeLayout](#listener-for-swipelayout)
