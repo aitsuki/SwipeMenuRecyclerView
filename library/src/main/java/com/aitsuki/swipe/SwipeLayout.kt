@@ -3,8 +3,6 @@ package com.aitsuki.swipe
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
-import android.util.SparseIntArray
 import android.view.*
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
@@ -60,7 +58,6 @@ class SwipeLayout @JvmOverloads constructor(
     private var rightMenu: View? = null
     private val designer: Designer
     private var initDesigner = false
-    private var firstLayout = true
 
     var swipeEnable = true
         set(value) {
@@ -121,10 +118,6 @@ class SwipeLayout @JvmOverloads constructor(
         val contentView = contentView ?: return
         val activeMenu = activeMenu ?: return
         when {
-            firstLayout -> {
-                onScreen = 0f
-                openState = 0
-            }
             animate -> {
                 openState = openState or FLAG_IS_CLOSING
                 dragger.smoothSlideViewTo(contentView, paddingLeft, contentView.top)
@@ -148,10 +141,6 @@ class SwipeLayout @JvmOverloads constructor(
         val left = if (activeMenu == leftMenu) activeMenu.width + paddingLeft
         else -activeMenu.width + paddingLeft
         when {
-            firstLayout -> {
-                onScreen = 1f
-                openState = FLAG_IS_OPENED
-            }
             animate -> {
                 openState = openState or FLAG_IS_OPENING
                 dragger.smoothSlideViewTo(contentView, left, contentView.top)
@@ -405,11 +394,6 @@ class SwipeLayout @JvmOverloads constructor(
         return activeMenu == dragger.findTopChildUnder(x, y)
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        firstLayout = true
-    }
-
     override fun onDetachedFromWindow() {
         if (openState and FLAG_IS_CLOSING == FLAG_IS_CLOSING) {
             dragger.abort()
@@ -418,7 +402,6 @@ class SwipeLayout @JvmOverloads constructor(
                 ViewCompat.offsetLeftAndRight(it, paddingLeft - it.left)
             }
         }
-        firstLayout = true
         super.onDetachedFromWindow()
     }
 
@@ -566,7 +549,6 @@ class SwipeLayout @JvmOverloads constructor(
                 designer.onLayout(it, contentView.right, parentTop, parentRight, parentBottom)
             }
         }
-        firstLayout = false
     }
 
     override fun generateDefaultLayoutParams(): ViewGroup.LayoutParams {
