@@ -26,6 +26,9 @@ class SwipeLayout @JvmOverloads constructor(
         private const val FLAG_IS_OPENING = 0x2
         private const val FLAG_IS_CLOSING = 0x4
 
+        const val LEFT = 1
+        const val RIGHT = 1 shl 1
+
         const val STATE_IDLE = ViewDragHelper.STATE_IDLE
         const val STATE_DRAGGING = ViewDragHelper.STATE_DRAGGING
         const val STATE_SETTLING = ViewDragHelper.STATE_SETTLING
@@ -59,9 +62,22 @@ class SwipeLayout @JvmOverloads constructor(
     private val designer: Designer
     private var initDesigner = false
 
-    var swipeEnable = true
+    // XXX: Should be independent of swipeFlags, and expose it?
+    internal val swipeEnable get() = (swipeFlags and (LEFT or RIGHT)) != 0
+
+    /**
+     * swipeFlags is used to control the swipe direction. If you want to disable the swipe action,
+     * set the value to zero.
+     */
+    var swipeFlags = LEFT or RIGHT
         set(value) {
-            closeActiveMenu()
+            if ((value and (LEFT or RIGHT)) == 0) {
+                closeActiveMenu()
+            } else if ((value and LEFT) == 0) {
+                closeRightMenu()
+            } else if ((value and RIGHT) == 0) {
+                closeLeftMenu()
+            }
             field = value
         }
 
@@ -80,6 +96,20 @@ class SwipeLayout @JvmOverloads constructor(
 
     fun closeMenu(animate: Boolean = true) {
         closeActiveMenu(animate)
+    }
+
+    fun closeLeftMenu(animate: Boolean = true) {
+        val activeMenu = activeMenu ?: return
+        if (activeMenu == leftMenu) {
+            closeActiveMenu(animate)
+        }
+    }
+
+    fun closeRightMenu(animate: Boolean = true) {
+        val activeMenu = activeMenu ?: return
+        if (activeMenu == rightMenu) {
+            closeActiveMenu(animate)
+        }
     }
 
     fun isLeftMenuOpened(): Boolean {
@@ -200,8 +230,8 @@ class SwipeLayout @JvmOverloads constructor(
 
         val dx = ev.x.toInt() - downX
         val dy = ev.y.toInt() - downY
-        val isRightDragging = dx > touchSlop && dx > abs(dy)
-        val isLeftDragging = dx < -touchSlop && abs(dx) > abs(dy)
+        val isRightDragging = dx > touchSlop && (swipeFlags and RIGHT) != 0 && dx > abs(dy)
+        val isLeftDragging = dx < -touchSlop && (swipeFlags and LEFT) != 0 &&abs(dx) > abs(dy)
 
         if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED
             || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
