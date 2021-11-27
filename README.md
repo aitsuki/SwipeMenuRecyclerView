@@ -52,7 +52,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.aitsuki:SwipeMenuRecyclerView:2.0.2'
+    implementation 'com.github.aitsuki:SwipeMenuRecyclerView:2.1.0'
 }
 ```
 
