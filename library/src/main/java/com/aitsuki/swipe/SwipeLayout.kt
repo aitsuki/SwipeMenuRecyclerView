@@ -744,7 +744,7 @@ class SwipeLayout @JvmOverloads constructor(
                     // If menu is INVISIBLE, move it to outside. See isTouchMenu.
                     menuView.layout(left - menuView.width, menuView.top, left, menuView.bottom)
                 } else {
-                    menuView.layout(left, menuView.top, left + menuView.width, menuView.bottom)
+                    menuView.layout(right - menuView.width, menuView.top, right, menuView.bottom)
                     if (menuView is ViewGroup && menuView.childCount > 1) {
                         layoutLeftMenu(menuView, left, right)
                     }
@@ -764,17 +764,17 @@ class SwipeLayout @JvmOverloads constructor(
 
         private fun layoutLeftMenu(menuView: ViewGroup, left: Int, right: Int) {
             val onScreen = (right - left).toFloat() / menuView.width
-            var child = menuView.getChildAt(menuView.childCount - 1)
-            var childLeft = (right - child.width * onScreen).toInt()
-            child.layout(childLeft, child.top, childLeft + child.width, child.bottom)
+            var child = menuView.getChildAt(0)
+            var childRight = menuView.width
+            child.layout(childRight - child.width, child.top, childRight, child.bottom)
             var prevChild = child
-            for (i in menuView.childCount - 2 downTo 0) {
+            for (i in 1 until menuView.childCount) {
                 child = menuView.getChildAt(i)
-                childLeft = (prevChild.left - child.width * onScreen).toInt()
+                childRight = (prevChild.right - prevChild.width * onScreen).toInt()
                 child.layout(
-                    childLeft,
+                    childRight - child.width,
                     child.top,
-                    childLeft + child.width,
+                    childRight ,
                     child.bottom
                 )
                 prevChild = child
