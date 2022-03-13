@@ -11,11 +11,11 @@ repositories {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdk 31
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 31
+        minSdk 15
+        targetSdk 31
         consumerProguardFiles 'proguard-rules.pro'
     }
     buildTypes {
@@ -31,6 +31,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    namespace 'com.aitsuki.swipe'
 }
 
 dependencies {
