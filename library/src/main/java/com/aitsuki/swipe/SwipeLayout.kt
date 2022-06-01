@@ -48,7 +48,7 @@ class SwipeLayout @JvmOverloads constructor(
     private var isDragging = false
     private var downX = 0
     private var downY = 0
-    private var alwaysInTapRegion = false
+    private var autoClosePending = false
 
     private val dragger = ViewDragHelper.create(this, ViewDragCallback())
 
@@ -123,11 +123,13 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     fun openLeftMenu(animate: Boolean = true) {
+        autoClosePending = false
         activeMenu = leftMenu
         openActiveMenu(animate)
     }
 
     fun openRightMenu(animate: Boolean = true) {
+        autoClosePending = false
         activeMenu = rightMenu
         openActiveMenu(animate)
     }
@@ -174,14 +176,15 @@ class SwipeLayout @JvmOverloads constructor(
             animate -> {
                 openState = openState or FLAG_IS_OPENING
                 dragger.smoothSlideViewTo(contentView, left, contentView.top)
+                invalidate()
             }
             else -> {
                 ViewCompat.offsetLeftAndRight(contentView, left - contentView.left)
                 dispatchOnSwipe(activeMenu, 1f)
                 updateMenuState(STATE_IDLE)
+                requestLayout()
             }
         }
-        invalidate()
     }
 
     private fun updateMenuState(activeState: Int) {
@@ -263,7 +266,7 @@ class SwipeLayout @JvmOverloads constructor(
                 downX = ev.x.toInt()
                 downY = ev.y.toInt()
                 if (autoClose || isTouchContent(downX, downY)) {
-                    alwaysInTapRegion = true
+                    autoClosePending = true
                 }
             }
             MotionEvent.ACTION_MOVE -> {
@@ -287,9 +290,11 @@ class SwipeLayout @JvmOverloads constructor(
                     isDragging = false
                     requestDisallowInterceptTouchEvent(false)
                 }
-                if (alwaysInTapRegion) {
+
+                if (autoClosePending) {
                     closeActiveMenu()
                 }
+                autoClosePending = false
             }
             else -> {
                 if (isDragging) {
@@ -304,7 +309,7 @@ class SwipeLayout @JvmOverloads constructor(
         val dy = (ev.y - downY).toInt()
         val distance = (dx * dx) + (dy * dy)
         if (distance > touchSlop * touchSlop) {
-            alwaysInTapRegion = false
+            autoClosePending = false
         }
     }
 
@@ -525,9 +530,11 @@ class SwipeLayout @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         if (isInEditMode) {
             if (preview == PREVIEW_LEFT) {
-                openLeftMenu(false)
+                activeMenu = leftMenu
+                openActiveMenu(false)
             } else if (preview == PREVIEW_RIGHT) {
-                openRightMenu(false)
+                activeMenu = rightMenu
+                openActiveMenu(false)
             }
         }
         val parentLeft = paddingLeft
