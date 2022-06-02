@@ -467,11 +467,6 @@ class SwipeLayout @JvmOverloads constructor(
                 rightMenu = child
             }
 
-            if (!initDesigner) {
-                designer.onInit(this, leftMenu, rightMenu)
-                initDesigner = true
-            }
-
             if (child.visibility != GONE) {
                 measureChild(child, widthMeasureSpec, heightMeasureSpec)
                 childWidth = childWidth.coerceAtLeast(child.measuredWidth)
@@ -485,6 +480,11 @@ class SwipeLayout @JvmOverloads constructor(
                     }
                 }
             }
+        }
+
+        if (!initDesigner) {
+            designer.onInit(this, leftMenu, rightMenu)
+            initDesigner = true
         }
 
         childWidth += paddingLeft + paddingRight
