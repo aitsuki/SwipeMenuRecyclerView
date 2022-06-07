@@ -2,7 +2,7 @@
 
 SwipeMenuRecyclerView is a lightweight sliding menu library，it can be use in the list or on its own.
 
-- Support multiple styles of menus (Classic, Overlay, Parallax), and easily customize your new styles.
+- Support multiple styles of menus (Classic, Overlay, Parallax), and easily customize your own style.
 - Support long menus, you can also slide on menu button.
 - Easily build in layout editor, as simple as build a TextView.
 
@@ -50,7 +50,7 @@ dependencyResolutionManagement {
 
 ```groovy
 dependencies {
-    implementation 'com.github.aitsuki:SwipeMenuRecyclerView:2.1.3'
+    implementation 'com.github.aitsuki:SwipeMenuRecyclerView:2.1.5'
 }
 ```
 

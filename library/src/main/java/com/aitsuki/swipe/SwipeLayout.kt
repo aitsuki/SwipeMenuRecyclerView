@@ -137,12 +137,12 @@ class SwipeLayout @JvmOverloads constructor(
         return activeMenu == rightMenu && openState and FLAG_IS_OPENED == FLAG_IS_OPENED
     }
 
-    fun isStartMenuOpened():Boolean {
+    fun isStartMenuOpened(): Boolean {
         return if (isLayoutRTL()) isRightMenuOpened() else isLeftMenuOpened()
     }
 
     fun isEndMenuOpened(): Boolean {
-        return  if (isLayoutRTL()) isLeftMenuOpened() else isRightMenuOpened()
+        return if (isLayoutRTL()) isLeftMenuOpened() else isRightMenuOpened()
     }
 
     fun openLeftMenu(animate: Boolean = true) {
@@ -265,9 +265,11 @@ class SwipeLayout @JvmOverloads constructor(
         val dx = ev.x.toInt() - downX
         val dy = ev.y.toInt() - downY
 
+        val isLeftDragging = dx < -touchSlop && abs(dx) > abs(dy)
+        val isRightDragging = dx > touchSlop && dx > abs(dy)
         val direction = getAbsoluteDirection(swipeFlags)
-        val isLeftDragging = dx < -touchSlop && (direction and LEFT) != 0 && abs(dx) > abs(dy)
-        val isRightDragging = dx > touchSlop && (direction and RIGHT) != 0 && dx > abs(dy)
+        val canDragLeft = (direction and LEFT) != 0
+        val canDragRight = (direction and RIGHT) != 0
 
         if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED
             || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
@@ -278,10 +280,10 @@ class SwipeLayout @JvmOverloads constructor(
                 isDragging = isLeftDragging || isRightDragging
             }
         } else {
-            if (isRightDragging) {
+            if (isRightDragging && canDragRight) {
                 activeMenu = leftMenu
                 isDragging = activeMenu != null
-            } else if (isLeftDragging) {
+            } else if (isLeftDragging && canDragLeft) {
                 activeMenu = rightMenu
                 isDragging = activeMenu != null
             }
