@@ -6,6 +6,8 @@
             <enum name="none" value="0"/>
             <enum name="left" value="1"/>
             <enum name="right" value="2"/>
+            <enum name="start" value="3"/>
+            <enum name="end" value="4"/>
         </attr>
         <attr name="autoClose" format="boolean"/>
         <attr name="designer" format="string"/>

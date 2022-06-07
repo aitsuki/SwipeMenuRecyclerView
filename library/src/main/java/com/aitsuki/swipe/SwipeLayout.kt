@@ -21,13 +21,19 @@ class SwipeLayout @JvmOverloads constructor(
         private const val PREVIEW_NONE = 0
         private const val PREVIEW_LEFT = 1
         private const val PREVIEW_RIGHT = 2
+        private const val PREVIEW_START = 3
+        private const val PREVIEW_END = 4
 
         private const val FLAG_IS_OPENED = 0x1
         private const val FLAG_IS_OPENING = 0x2
         private const val FLAG_IS_CLOSING = 0x4
 
-        const val LEFT = 1
-        const val RIGHT = 1 shl 1
+        const val LEFT = 0x0001
+        const val RIGHT = 0x0002
+        const val RELATIVE_LAYOUT_DIRECTION = 0x1000
+        const val START = LEFT or RELATIVE_LAYOUT_DIRECTION
+        const val END = RIGHT or RELATIVE_LAYOUT_DIRECTION
+
 
         const val STATE_IDLE = ViewDragHelper.STATE_IDLE
         const val STATE_DRAGGING = ViewDragHelper.STATE_DRAGGING
@@ -71,11 +77,12 @@ class SwipeLayout @JvmOverloads constructor(
      */
     var swipeFlags = LEFT or RIGHT
         set(value) {
-            if ((value and (LEFT or RIGHT)) == 0) {
+            val direction = getAbsoluteDirection(value)
+            if ((direction and (LEFT or RIGHT)) == 0) {
                 closeActiveMenu()
-            } else if ((value and LEFT) == 0) {
+            } else if ((direction and LEFT) == 0) {
                 closeRightMenu()
-            } else if ((value and RIGHT) == 0) {
+            } else if ((direction and RIGHT) == 0) {
                 closeLeftMenu()
             }
             field = value
@@ -112,6 +119,14 @@ class SwipeLayout @JvmOverloads constructor(
         }
     }
 
+    fun closeStartMenu(animate: Boolean = true) {
+        if (isLayoutRTL()) closeRightMenu(animate) else closeLeftMenu(animate)
+    }
+
+    fun closeEndMenu(animate: Boolean = true) {
+        if (isLayoutRTL()) closeLeftMenu(animate) else closeRightMenu(animate)
+    }
+
     fun isLeftMenuOpened(): Boolean {
         val activeMenu = activeMenu ?: return false
         return activeMenu == leftMenu && openState and FLAG_IS_OPENED == FLAG_IS_OPENED
@@ -120,6 +135,14 @@ class SwipeLayout @JvmOverloads constructor(
     fun isRightMenuOpened(): Boolean {
         val activeMenu = activeMenu ?: return false
         return activeMenu == rightMenu && openState and FLAG_IS_OPENED == FLAG_IS_OPENED
+    }
+
+    fun isStartMenuOpened():Boolean {
+        return if (isLayoutRTL()) isRightMenuOpened() else isLeftMenuOpened()
+    }
+
+    fun isEndMenuOpened(): Boolean {
+        return  if (isLayoutRTL()) isLeftMenuOpened() else isRightMenuOpened()
     }
 
     fun openLeftMenu(animate: Boolean = true) {
@@ -132,6 +155,14 @@ class SwipeLayout @JvmOverloads constructor(
         autoClosePending = false
         activeMenu = rightMenu
         openActiveMenu(animate)
+    }
+
+    fun openStartMenu(animate: Boolean = true) {
+        if (isLayoutRTL()) openRightMenu(animate) else openLeftMenu(animate)
+    }
+
+    fun openEndMenu(animate: Boolean = true) {
+        if (isLayoutRTL()) openLeftMenu(animate) else openRightMenu(animate)
     }
 
     fun addListener(listener: Listener) {
@@ -233,8 +264,10 @@ class SwipeLayout @JvmOverloads constructor(
 
         val dx = ev.x.toInt() - downX
         val dy = ev.y.toInt() - downY
-        val isRightDragging = dx > touchSlop && (swipeFlags and RIGHT) != 0 && dx > abs(dy)
-        val isLeftDragging = dx < -touchSlop && (swipeFlags and LEFT) != 0 &&abs(dx) > abs(dy)
+
+        val direction = getAbsoluteDirection(swipeFlags)
+        val isLeftDragging = dx < -touchSlop && (direction and LEFT) != 0 && abs(dx) > abs(dy)
+        val isRightDragging = dx > touchSlop && (direction and RIGHT) != 0 && dx > abs(dy)
 
         if (openState and FLAG_IS_OPENED == FLAG_IS_OPENED
             || openState and FLAG_IS_OPENING == FLAG_IS_OPENING
@@ -529,13 +562,7 @@ class SwipeLayout @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         if (isInEditMode) {
-            if (preview == PREVIEW_LEFT) {
-                activeMenu = leftMenu
-                openActiveMenu(false)
-            } else if (preview == PREVIEW_RIGHT) {
-                activeMenu = rightMenu
-                openActiveMenu(false)
-            }
+            openPreview()
         }
         val parentLeft = paddingLeft
         val parentRight = right - left - paddingRight
@@ -586,6 +613,36 @@ class SwipeLayout @JvmOverloads constructor(
                 designer.onLayout(it, contentView.right, parentTop, parentRight, parentBottom)
             }
         }
+    }
+
+    private fun openPreview() {
+        activeMenu = when (preview) {
+            PREVIEW_LEFT -> leftMenu
+            PREVIEW_RIGHT -> rightMenu
+            PREVIEW_START -> if (isLayoutRTL()) rightMenu else leftMenu
+            PREVIEW_END -> if (isLayoutRTL()) leftMenu else rightMenu
+            else -> null
+        }
+        openActiveMenu(false)
+    }
+
+    private fun isLayoutRTL(): Boolean {
+        return ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL
+    }
+
+    private fun getAbsoluteDirection(direction: Int): Int {
+        var result = direction
+        if ((result and RELATIVE_LAYOUT_DIRECTION) > 0) {
+            if ((result and START) == START) {
+                result = result and START.inv()
+                result = if (isLayoutRTL()) result or RIGHT else result or LEFT
+            } else if ((result and END) == END) {
+                result = result and END.inv()
+                result = if (isLayoutRTL()) result or LEFT else result or RIGHT
+            }
+            result = result and RELATIVE_LAYOUT_DIRECTION.inv()
+        }
+        return result
     }
 
     override fun generateDefaultLayoutParams(): ViewGroup.LayoutParams {
@@ -781,7 +838,7 @@ class SwipeLayout @JvmOverloads constructor(
                 child.layout(
                     childRight - child.width,
                     child.top,
-                    childRight ,
+                    childRight,
                     child.bottom
                 )
                 prevChild = child
