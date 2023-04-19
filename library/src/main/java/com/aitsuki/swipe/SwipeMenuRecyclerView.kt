@@ -16,7 +16,7 @@ private const val TAG = "SwipeMenuRecyclerView"
 /**
  * Created by Aitsuki on 2017/2/23.
  */
-class SwipeMenuRecyclerView @JvmOverloads constructor(
+open class SwipeMenuRecyclerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : RecyclerView(context, attrs) {
 

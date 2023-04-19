@@ -173,6 +173,10 @@ class SwipeLayout @JvmOverloads constructor(
         listeners.remove(listener)
     }
 
+    fun clearListeners() {
+        listeners.clear()
+    }
+
     private fun closeActiveMenu(animate: Boolean = true) {
         if (activeMenu == null) {
             openState = 0
