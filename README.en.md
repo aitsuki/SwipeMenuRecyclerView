@@ -74,16 +74,35 @@ In XML layout file:
 
     <!-- This is the left menu, because it specifies `layout_gravity=start` -->
     <TextView
-        ...
-        android:layout_gravity="start" />
+        android:id="@+id/left_menu"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/red500"
+        android:gravity="center"
+        android:text="LEFT"
+        android:textSize="18sp" />
 
     <!-- This is the right menu -->
     <TextView
-        ...
-        android:layout_gravity="end" />
+        android:id="@+id/right_menu"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@color/blue500"
+        android:gravity="center"
+        android:text="RIGHT"
+        android:textSize="18sp" />
 
     <!-- This is the content, because it dows not specify `layout_gravity` -->
-    <TextView />
+    <TextView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="Classic"
+        android:background="@color/white"
+        android:textSize="18sp" />
 
 </com.aitsuki.swipe.SwipeLayout>
 ```
