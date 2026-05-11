@@ -70,6 +70,8 @@ class SwipeLayout @JvmOverloads constructor(
     private var contentView: View? = null
     private var leftMenu: View? = null
     private var rightMenu: View? = null
+    private var pendingOpenDirection = 0
+    private var pendingOpenAnimate = true
     private val designer: Designer
     private var initDesigner = false
 
@@ -152,14 +154,26 @@ class SwipeLayout @JvmOverloads constructor(
 
     fun openLeftMenu(animate: Boolean = true) {
         autoClosePending = false
+        resolveChildViews()
         activeMenu = leftMenu
-        openActiveMenu(animate)
+        if (activeMenu?.width == 0 || contentView?.width == 0) {
+            deferOpenMenu(LEFT, animate)
+        } else {
+            pendingOpenDirection = 0
+            openActiveMenu(animate)
+        }
     }
 
     fun openRightMenu(animate: Boolean = true) {
         autoClosePending = false
+        resolveChildViews()
         activeMenu = rightMenu
-        openActiveMenu(animate)
+        if (activeMenu?.width == 0 || contentView?.width == 0) {
+            deferOpenMenu(RIGHT, animate)
+        } else {
+            pendingOpenDirection = 0
+            openActiveMenu(animate)
+        }
     }
 
     fun openStartMenu(animate: Boolean = true) {
@@ -223,6 +237,34 @@ class SwipeLayout @JvmOverloads constructor(
                 dispatchOnSwipe(activeMenu, 1f)
                 updateMenuState(STATE_IDLE)
                 requestLayout()
+            }
+        }
+    }
+
+    private fun deferOpenMenu(direction: Int, animate: Boolean) {
+        pendingOpenDirection = direction
+        pendingOpenAnimate = animate
+        requestLayout()
+    }
+
+    private fun resolveChildViews() {
+        contentView = null
+        leftMenu = null
+        rightMenu = null
+
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            val lp = child.layoutParams as LayoutParams
+            if (lp.gravity == Gravity.NO_GRAVITY) {
+                contentView = child
+            }
+            val absoluteGravity = GravityCompat.getAbsoluteGravity(
+                lp.gravity,
+                ViewCompat.getLayoutDirection(child)
+            )
+            when (absoluteGravity and Gravity.HORIZONTAL_GRAVITY_MASK) {
+                Gravity.LEFT -> leftMenu = child
+                Gravity.RIGHT -> rightMenu = child
             }
         }
     }
@@ -490,6 +532,7 @@ class SwipeLayout @JvmOverloads constructor(
             MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY ||
                     MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY
         matchParentChildren.clear()
+        resolveChildViews()
         var childWidth = 0
         var childHeight = 0
         var childState = 0
@@ -497,19 +540,6 @@ class SwipeLayout @JvmOverloads constructor(
             val child = getChildAt(i)
 
             val lp = child.layoutParams as LayoutParams
-            if (lp.gravity == Gravity.NO_GRAVITY) {
-                contentView = child
-            }
-            val absoluteGravity = GravityCompat.getAbsoluteGravity(
-                lp.gravity,
-                ViewCompat.getLayoutDirection(child)
-            )
-            val gravity = absoluteGravity and Gravity.HORIZONTAL_GRAVITY_MASK
-            if (gravity == Gravity.LEFT) {
-                leftMenu = child
-            } else if (gravity == Gravity.RIGHT) {
-                rightMenu = child
-            }
 
             if (child.visibility != GONE) {
                 measureChild(child, widthMeasureSpec, heightMeasureSpec)
@@ -623,6 +653,14 @@ class SwipeLayout @JvmOverloads constructor(
             rightMenu?.let {
                 designer.onLayout(it, contentView.right, parentTop, parentRight, parentBottom)
             }
+        }
+
+        if (pendingOpenDirection != 0) {
+            val direction = pendingOpenDirection
+            val animate = pendingOpenAnimate
+            pendingOpenDirection = 0
+            activeMenu = if (direction == LEFT) leftMenu else rightMenu
+            openActiveMenu(animate)
         }
     }
 
