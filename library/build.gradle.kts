@@ -3,8 +3,25 @@ plugins {
     id("maven-publish")
 }
 
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            groupId = "com.github.aitsuki"
+            artifactId = "SwipeMenuRecyclerView"
+
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+}
+
 android {
     namespace = "com.aitsuki.swipe"
+
+    publishing {
+        singleVariant("release")
+    }
 
     compileSdk {
         version = release(37)
