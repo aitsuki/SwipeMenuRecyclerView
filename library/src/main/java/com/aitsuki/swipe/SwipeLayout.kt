@@ -3,7 +3,11 @@ package com.aitsuki.swipe
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.view.*
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewConfiguration
+import android.view.ViewGroup
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.customview.widget.ViewDragHelper
@@ -13,6 +17,7 @@ import kotlin.math.abs
 /**
  * Created by Aitsuki on 2017/2/23.
  */
+@Suppress("unused", "UseKtx", "DEPRECATION")
 class SwipeLayout @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr) {
@@ -751,8 +756,8 @@ class SwipeLayout @JvmOverloads constructor(
 
         override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
             this.leftMenu = leftMenu
-            leftMenu?.visibility = View.INVISIBLE
-            rightMenu?.visibility = View.INVISIBLE
+            leftMenu?.visibility = INVISIBLE
+            rightMenu?.visibility = INVISIBLE
         }
 
         override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {
@@ -771,8 +776,8 @@ class SwipeLayout @JvmOverloads constructor(
 
         override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
             this.leftMenu = leftMenu
-            leftMenu?.visibility = View.INVISIBLE
-            rightMenu?.visibility = View.INVISIBLE
+            leftMenu?.visibility = INVISIBLE
+            rightMenu?.visibility = INVISIBLE
         }
 
         override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {
@@ -802,8 +807,8 @@ class SwipeLayout @JvmOverloads constructor(
 
         override fun onInit(parent: SwipeLayout, leftMenu: View?, rightMenu: View?) {
             this.leftMenu = leftMenu
-            leftMenu?.visibility = View.INVISIBLE
-            rightMenu?.visibility = View.INVISIBLE
+            leftMenu?.visibility = INVISIBLE
+            rightMenu?.visibility = INVISIBLE
         }
 
         override fun onLayout(menuView: View, left: Int, top: Int, right: Int, bottom: Int) {

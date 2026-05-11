@@ -16,6 +16,7 @@ private const val TAG = "SwipeMenuRecyclerView"
 /**
  * Created by Aitsuki on 2017/2/23.
  */
+@Suppress("unused", "UseKtx")
 open class SwipeMenuRecyclerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : RecyclerView(context, attrs) {
@@ -49,6 +50,7 @@ open class SwipeMenuRecyclerView @JvmOverloads constructor(
                     }
                 }
             }
+
             MotionEvent.ACTION_POINTER_DOWN -> {
                 val x = ev.getX(ev.actionIndex)
                 val y = ev.getY(ev.actionIndex)
@@ -57,6 +59,7 @@ open class SwipeMenuRecyclerView @JvmOverloads constructor(
                     return false
                 }
             }
+
             MotionEvent.ACTION_MOVE -> {
                 if (initMotionX.isNotEmpty()) {
                     for (i in 0 until ev.pointerCount) {
@@ -83,17 +86,17 @@ open class SwipeMenuRecyclerView @JvmOverloads constructor(
                             ) {
                                 pastSlopPointerId = pointerId
                             }
-                        } else if (pastSlopPointerId != MotionEvent.INVALID_POINTER_ID
-                            && pastSlopPointerId != pointerId
-                        ) {
+                        } else if (pastSlopPointerId != pointerId) {
                             ev.action = MotionEvent.ACTION_CANCEL
                         }
                     }
                 }
             }
+
             MotionEvent.ACTION_POINTER_UP -> {
                 clearMotionHistory(ev.getPointerId(ev.actionIndex))
             }
+
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 clearMotionHistory()
                 if (cancelUp) {
