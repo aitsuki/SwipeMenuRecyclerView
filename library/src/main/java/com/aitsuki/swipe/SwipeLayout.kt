@@ -113,6 +113,9 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     fun closeLeftMenu(animate: Boolean = true) {
+        if (pendingOpenDirection == LEFT) {
+            pendingOpenDirection = 0
+        }
         val activeMenu = activeMenu ?: return
         if (activeMenu == leftMenu) {
             closeActiveMenu(animate)
@@ -120,6 +123,9 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     fun closeRightMenu(animate: Boolean = true) {
+        if (pendingOpenDirection == RIGHT) {
+            pendingOpenDirection = 0
+        }
         val activeMenu = activeMenu ?: return
         if (activeMenu == rightMenu) {
             closeActiveMenu(animate)
@@ -197,11 +203,18 @@ class SwipeLayout @JvmOverloads constructor(
     }
 
     private fun closeActiveMenu(animate: Boolean = true) {
+        pendingOpenDirection = 0
         if (activeMenu == null) {
+            onScreen = 0f
             openState = 0
             return
         }
-        val contentView = contentView ?: return
+        val contentView = contentView ?: run {
+            onScreen = 0f
+            activeMenu = null
+            openState = 0
+            return
+        }
         val activeMenu = activeMenu ?: return
         when {
             animate -> {
